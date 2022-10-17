@@ -8,6 +8,7 @@ import plotly.express as px
 from numpy import sin, cos, pi
 from scipy.fftpack import fft, fftfreq, ifft
 import random
+from streamlit_custom_slider import st_custom_slider
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
@@ -40,7 +41,7 @@ def load_data(select):
         column_names = ['ekg', 't']
         mvc1 = pd.read_csv('MVC1.txt', sep = ',', names = column_names, skiprows= 50, skipfooter = 50)
     elif select =="ECG Sample Signal":
-        data = np.loadtxt('../Interactive-Dashboards-With-Streamlit/ECG.dat',unpack=True)
+        data = np.loadtxt('ECG.dat',unpack=True)
         mvc1 = pd.DataFrame(data)
         mvc1.columns=['ECG']
     else:
@@ -69,8 +70,27 @@ frequencies = ['2fmax', '3fmax', '4fmax', '5fmax','6fmax','7fmax','8fmax','9fmax
 
 user_maximum_sampling_frequency= st.selectbox('User Can Change The Maximum Sampling Frequency From Here', frequencies )
 user_maximum_sampling_frequency_position = frequencies.index(user_maximum_sampling_frequency) + 1
-# maximum_sampling_frequency_slider_value = extract_max_frequency_of_signal(random_signal)* user_maximum_sampling_frequency_position
-
+# maximum_sampling_frequency_slider_value = extract_max_frequency_of_signal(random_signal)* user_maximum_sampling_frequency_position 
+SNR= st_custom_slider('SNR', 0, 10,0,key='SNR')
+# Noise function 
+def createNoise(SNR,Signal_v ):
+    # change signal data to array 
+    signal_volt=Signal_v[0:300].to_numpy()
+    # calculate power in watto off signal 
+    Signal_power=signal_volt**2
+    # calculate avarage power of signal
+    Signal_avg_power=np.mean(Signal_power)
+    # change signal into db
+    signal_avg_db = 10 * np.log10(Signal_avg_power)
+    # Calculate noise according to [2] then convert to watts
+    noise_avg_db = signal_avg_db - SNR
+    noise_avg_power = 10 ** (noise_avg_db / 10)
+    # Generate an sample of white noise
+    mean_noise = 0
+    #Generate random guassian noise
+    noise_volts = np.random.normal(mean_noise, np.sqrt(noise_avg_power), len(signal_volt))
+    #return noisy signal
+    return noise_volts+signal_volt
 if selected_signal == "Generate A Random Signal":
     Fs=40
     delay_frequecny=0.0780
@@ -86,9 +106,14 @@ elif selected_signal == "EMG Sample Signal":
     fig = px.line(emg.t, emg.emg)
     st.plotly_chart(fig)
 elif selected_signal == "ECG Sample Signal":
-    ecg = load_data( selected_signal )
-    fig = px.line(ecg[0:500])
-    st.plotly_chart(fig)
+    ecg = load_data( selected_signal ) 
+    if SNR==0 :
+        fig = px.line(ecg[0:300])
+        st.plotly_chart(fig)
+    else:
+        noised_signal=createNoise(SNR,ecg)
+        noise_fig=px.line(noised_signal)
+        st.plotly_chart(noise_fig)
 elif selected_signal == "EEG Sample Signal":
     eeg = load_data( selected_signal )
     fig = px.line(eeg.emg, eeg.t)
@@ -96,5 +121,5 @@ elif selected_signal == "EEG Sample Signal":
 else:
     load_data( selected_signal)
 # else:
-#     #user will provide its own file
+#     #user will provide its own file08
 

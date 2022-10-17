@@ -123,3 +123,40 @@ else:
 # else:
 #     #user will provide its own file08
 
+
+
+# --------------------------------------------------------------------------------------------
+SamplingRate = st.slider('sample size', 0, 200, 25)
+frequancy = 20
+time_step = np.linspace(0, 0.5, 200)
+signalWave = np.sin(2*np.pi*frequancy*time_step)
+S_rate = SamplingRate
+
+Time = 1/S_rate
+num_of_samp = np.arange(0, 0.5/Time)
+time_for_sampling = num_of_samp*Time
+SignalWave_for_sampling = np.sin(2*np.pi*frequancy*time_for_sampling)
+
+fig1 = plt.figure(figsize=(10, 8))
+plt.subplot(2, 2, 1)
+plt.plot(time_step, signalWave, linewidth=3,
+         label='SineWave of frequency 20 Hz')
+plt.xlabel('time.', fontsize=15)
+plt.ylabel('Amplitude', fontsize=15)
+plt.legend(fontsize=10, loc='upper right')
+
+
+plt.subplot(2, 2, 2)
+plt.plot(time_for_sampling, SignalWave_for_sampling, 'o-')
+plt.xlabel('time.', fontsize=15)
+plt.ylabel('Amplitude', fontsize=15)
+plt.legend(fontsize=10, loc='upper right')
+
+st.pyplot(fig1)
+# plt.subplot(2, 2, 2)
+# plt.plot(time_for_sampling, SignalWave_for_sampling, 'g-', label='Reconstructed Sine Wave')
+# plt.xlabel('time.', fontsize=15)
+# plt.ylabel('Amplitude', fontsize=15)
+# plt.legend(fontsize=10, loc='upper right')
+
+

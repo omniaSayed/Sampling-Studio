@@ -11,6 +11,7 @@ import random
 from streamlit_custom_slider import st_custom_slider
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+from plotly.subplots import make_subplots
 
 # page construction
 st.title("Sampling Studio For Biological Signals")
@@ -65,11 +66,11 @@ def load_data(select, uploaded_file=None):
 # def open_file():
 
 #Sample Signals for the user to try sampling rate change on
-selected_signal = st.sidebar.selectbox('Provided Signals', ['Generate A Random Signal', 'EKG Sample Signal', 'ECG Sample Signal', 'EMG Sample Signal', 'EEG SampleSignal', 'Provide A Local File Signal'], key='1')
+selected_signal = st.sidebar.selectbox('Provided Signals', ['Generate A Random Signal', 'EKG Sample Signal', 'ECG Sample Signal', 'EMG Sample Signal', 'EEG Sample Signal', 'Provide A Local File Signal'], key='1')
 
 # sampling_frequency_value_slider = st.slider('Change The Sampling Frequency', value = maximum_sampling_frequency_slider_value)
 def set_slider(max_freq):
-    user_maximum_sampling_frequency= st.slider('User Can Change The Maximum Sampling Frequency From Here', 1,3*max_freq )
+    st.slider('User Can Change The Maximum Sampling Frequency From Here', 1,3*max_freq )
 
 
 # maximum_sampling_frequency_slider_value = extract_max_frequency_of_signal(random_signal)* user_maximum_sampling_frequency_position 
@@ -103,16 +104,21 @@ if selected_signal == "Generate A Random Signal":
     Tw=N/Fs
     t=np.linspace(0,Tw,num=N)
     random_signal = generate_signal(t)
-    random_signal_dict = {"time": t, "signal": random_signal}
-    fig = plt.figure()
-    plt.plot("time","signal", data = random_signal_dict)
-    st.pyplot(fig)
+    fig = px.line(x=t, y=random_signal)
+    st.plotly_chart(fig)
 
 elif selected_signal == "EMG Sample Signal":
     maximum_frequency=500
     set_slider(maximum_frequency)
     emg = load_data( selected_signal )
     fig = px.line(x=emg.t, y=emg.emg)
+    st.plotly_chart(fig)
+
+elif selected_signal == "EKG Sample Signal":
+    maximum_frequency=500
+    set_slider(maximum_frequency)
+    emg = load_data( selected_signal )
+    fig = px.line(x=emg.t, y=emg.ekg)
     st.plotly_chart(fig)
 
 elif selected_signal == "ECG Sample Signal":
@@ -131,18 +137,17 @@ elif selected_signal == "EEG Sample Signal":
     maximum_frequency=500
     set_slider(maximum_frequency)
     eeg = load_data( selected_signal )
-    fig = px.line(x=eeg.emg, y=eeg.t)
+    fig = px.line(x=eeg.t, y=eeg.eeg)
     st.plotly_chart(fig)
 
-else:
+elif selected_signal == 'Provide A Local File Signal':
     uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
     maximum_frequency=500
     set_slider(maximum_frequency)
     if uploaded_file:
         data=load_data( 'Provide A Local File Signal',uploaded_file)
-        fig = plt.figure()
-        plt.plot(x=data.t, y=data.value)
-        st.pyplot(fig)
+        fig = px.line(x=data.t, y=data.value)
+        st.plotly_chart(fig)
 
 
 
@@ -158,22 +163,30 @@ num_of_samp = np.arange(0, 0.5/Time)
 time_for_sampling = num_of_samp*Time
 SignalWave_for_sampling = np.sin(2*np.pi*frequancy*time_for_sampling)
 
-fig1 = plt.figure(figsize=(10, 8))
-plt.subplot(2, 2, 1)
-plt.plot(time_step, signalWave, linewidth=3,
-         label='SineWave of frequency 20 Hz')
-plt.xlabel('time.', fontsize=15)
-plt.ylabel('Amplitude', fontsize=15)
-plt.legend(fontsize=10, loc='upper right')
 
 
-plt.subplot(2, 2, 2)
-plt.plot(time_for_sampling, SignalWave_for_sampling, 'o-')
-plt.xlabel('time.', fontsize=15)
-plt.ylabel('Amplitude', fontsize=15)
-plt.legend(fontsize=10, loc='upper right')
 
-st.pyplot(fig1)
+
+
+fig= make_subplots(rows=1, cols=2)
+
+fig.add_trace(
+    go.Scatter(x=time_step, y=signalWave,name='SineWave of frequency 20 Hz'),
+    row=1, col=1
+)
+fig.add_trace(
+    go.Scatter(x=time_for_sampling, y=SignalWave_for_sampling,name='o-'),
+    row=1, col=2
+)
+
+fig.update_xaxes(title_text='Time', row=1, col=1)
+fig.update_xaxes(title_text='Time', row=1, col=1)
+
+fig.update_yaxes(title_text='Amplitude', row=1, col=1)
+fig.update_yaxes(title_text='Amplitude', row=1, col=1)
+
+fig.update_layout(height=600, width=800)
+st.plotly_chart(fig)
 # plt.subplot(2, 2, 2)
 # plt.plot(time_for_sampling, SignalWave_for_sampling, 'g-', label='Reconstructed Sine Wave')
 # plt.xlabel('time.', fontsize=15)

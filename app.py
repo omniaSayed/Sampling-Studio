@@ -32,21 +32,24 @@ def generate_signal(time_domain):
     print('Noise added')
     return randomly_generated_signal
 
-#reading Ekg Data to be plotted function
-def load_data(select):
+#reading Data to be plotted function
+def load_data(select, uploaded_file=None):
     if select == "EMG Sample Signal":
-        column_names = ['emg', 't']
-        mvc1 = pd.read_csv('MVC1.txt', sep = ',', names = column_names, skiprows= 50, skipfooter = 50)
+        column_names = ['t', 'emg']
+        mvc1 = pd.read_csv('EMG.csv', sep = ',', names = column_names, skiprows= 50, skipfooter = 50)
     elif select == 'EKG Sample Signal':
-        column_names = ['ekg', 't']
+        column_names = ['t', 'ekg']
         mvc1 = pd.read_csv('MVC1.txt', sep = ',', names = column_names, skiprows= 50, skipfooter = 50)
     elif select =="ECG Sample Signal":
         data = np.loadtxt('ECG.dat',unpack=True)
         mvc1 = pd.DataFrame(data)
-        mvc1.columns=['ECG']
-    else:
-        column_names = ['eeg', 't']
+        mvc1.columns=['t', 'ECG']
+    elif select =="EEG Sample Signal":
+        column_names = ['t', 'eeg']
         mvc1 = pd.read_csv('MVC1.txt', sep = ',', names = column_names, skiprows= 50, skipfooter = 50)
+    elif select =="Provide A Local File Signal":
+        column_names = ['t','value']
+        mvc1 = pd.read_csv(uploaded_file, sep = ',', names = column_names, skiprows= 50, skipfooter = 50)
     return mvc1
 
 #extractiong maximum frequency from a signal function
@@ -65,13 +68,13 @@ def load_data(select):
 selected_signal = st.sidebar.selectbox('Provided Signals', ['Generate A Random Signal', 'EKG Sample Signal', 'ECG Sample Signal', 'EMG Sample Signal', 'EEG SampleSignal', 'Provide A Local File Signal'], key='1')
 
 # sampling_frequency_value_slider = st.slider('Change The Sampling Frequency', value = maximum_sampling_frequency_slider_value)
+def set_slider(max_freq):
+    user_maximum_sampling_frequency= st.slider('User Can Change The Maximum Sampling Frequency From Here', 1,3*max_freq )
 
-frequencies = ['2fmax', '3fmax', '4fmax', '5fmax','6fmax','7fmax','8fmax','9fmax', '10fmax']
 
-user_maximum_sampling_frequency= st.selectbox('User Can Change The Maximum Sampling Frequency From Here', frequencies )
-user_maximum_sampling_frequency_position = frequencies.index(user_maximum_sampling_frequency) + 1
 # maximum_sampling_frequency_slider_value = extract_max_frequency_of_signal(random_signal)* user_maximum_sampling_frequency_position 
 SNR= st_custom_slider('SNR', 0, 10,0,key='SNR')
+
 # Noise function 
 def createNoise(SNR,Signal_v ):
     # change signal data to array 
@@ -91,6 +94,8 @@ def createNoise(SNR,Signal_v ):
     noise_volts = np.random.normal(mean_noise, np.sqrt(noise_avg_power), len(signal_volt))
     #return noisy signal
     return noise_volts+signal_volt
+
+
 if selected_signal == "Generate A Random Signal":
     Fs=40
     delay_frequecny=0.0780
@@ -99,13 +104,20 @@ if selected_signal == "Generate A Random Signal":
     t=np.linspace(0,Tw,num=N)
     random_signal = generate_signal(t)
     random_signal_dict = {"time": t, "signal": random_signal}
-    fig = plt.plot("t","signal", data = random_signal_dict)
+    fig = plt.figure()
+    plt.plot("time","signal", data = random_signal_dict)
     st.pyplot(fig)
+
 elif selected_signal == "EMG Sample Signal":
+    maximum_frequency=500
+    set_slider(maximum_frequency)
     emg = load_data( selected_signal )
-    fig = px.line(emg.t, emg.emg)
+    fig = px.line(x=emg.t, y=emg.emg)
     st.plotly_chart(fig)
+
 elif selected_signal == "ECG Sample Signal":
+    maximum_frequency=500
+    set_slider(maximum_frequency)
     ecg = load_data( selected_signal ) 
     if SNR==0 :
         fig = px.line(ecg[0:300])
@@ -114,14 +126,23 @@ elif selected_signal == "ECG Sample Signal":
         noised_signal=createNoise(SNR,ecg)
         noise_fig=px.line(noised_signal)
         st.plotly_chart(noise_fig)
+
 elif selected_signal == "EEG Sample Signal":
+    maximum_frequency=500
+    set_slider(maximum_frequency)
     eeg = load_data( selected_signal )
-    fig = px.line(eeg.emg, eeg.t)
+    fig = px.line(x=eeg.emg, y=eeg.t)
     st.plotly_chart(fig)
+
 else:
-    load_data( selected_signal)
-# else:
-#     #user will provide its own file08
+    uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
+    maximum_frequency=500
+    set_slider(maximum_frequency)
+    if uploaded_file:
+        data=load_data( 'Provide A Local File Signal',uploaded_file)
+        fig = plt.figure()
+        plt.plot(x=data.t, y=data.value)
+        st.pyplot(fig)
 
 
 

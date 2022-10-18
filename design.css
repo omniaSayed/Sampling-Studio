@@ -1,0 +1,36 @@
+[data-testid="stSidebar"]{
+    background-color: rgba(2, 2, 46, 0.925);
+    border-radius: 1%;
+    border-color: transparent;
+    
+}
+.stMarkdown h1{
+    background-color: rgba(125, 187, 245, 0.712);
+    border-radius: 2%;
+    border-color: transparent;
+    color: rgba(255, 255, 255, 255);
+    font-family: sans-serif;
+    font-size: 20px;
+    text-align: center;
+}
+div [data-baseweb="select"]>div{
+    background-color: rgba(3, 19, 48, 0.486);  
+    color: rgba(255, 255, 255, 0.795);
+    border-color: rgba(114, 171, 218, 0.651);
+    border-radius: 3%;
+    font-family: sans-serif;
+    font-size: 16px;
+    text-align: center;
+}
+label {
+    color: rgb(255, 255, 255);
+    font-family: sans-serif;
+    font-size: 30px;
+    text-align: left;
+}
+label.css-81oif8.effi0qh3 {
+    color: rgb(255, 255, 255);
+}
+div.bk bl bm bn b1 {
+    color: rgb(255, 255, 255);
+}

@@ -22,15 +22,28 @@ div [data-baseweb="select"]>div{
     font-size: 16px;
     text-align: center;
 }
-label {
-    color: rgb(255, 255, 255);
-    font-family: sans-serif;
-    font-size: 30px;
-    text-align: left;
-}
 label.css-81oif8.effi0qh3 {
     color: rgb(255, 255, 255);
+    font-family: sans-serif;
+    font-size: 16px;
+    text-align: left;
 }
 div.bk bl bm bn b1 {
     color: rgb(255, 255, 255);
+}
+.css-demzbm.e88czh83 {
+    background-color: beige;
+}
+.css-1inwz65.e88czh80 {
+    border-radius: 30%;
+    background-color: white;
+    font-family: sans-serif;
+    font-size: 16px;
+    text-align: left;
+}
+.StyledThumbValue.css-10y5sf6.e88czh82{
+    color: rgba(241, 241, 241, 0.925);
+    font-family: sans-serif;
+    font-size: 16px;
+    text-align: left;
 }

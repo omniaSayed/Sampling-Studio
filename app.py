@@ -17,7 +17,8 @@ from plotly.subplots import make_subplots
 st.title("Sampling Studio For Biological Signals")
 st.sidebar.title("Sampling Settings")
 st.markdown(" Welcome To Our Sampling Studio ")
-
+with open("design.css")as f:
+    st.markdown(f"<style>{f.read() }</style>",unsafe_allow_html=True)
 #cash using(mini memory for the front end)
 @st.cache(persist=True)
 
@@ -74,7 +75,8 @@ def set_slider(max_freq):
 
 
 # maximum_sampling_frequency_slider_value = extract_max_frequency_of_signal(random_signal)* user_maximum_sampling_frequency_position 
-SNR= st_custom_slider('SNR', 0, 10,0,key='SNR')
+with st.sidebar:
+   SNR= st_custom_slider('SNR', 0, 20,0,key='SNR')
 
 # Noise function 
 def createNoise(SNR,Signal_v ):

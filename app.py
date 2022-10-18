@@ -71,7 +71,7 @@ selected_signal = st.sidebar.selectbox('Provided Signals', ['Generate A Random S
 
 # sampling_frequency_value_slider = st.slider('Change The Sampling Frequency', value = maximum_sampling_frequency_slider_value)
 def set_slider(max_freq):
-    st.slider('User Can Change The Maximum Sampling Frequency From Here', 1,3*max_freq )
+     st.sidebar.slider('User Can Change The Maximum Sampling Frequency From Here', 1,3*max_freq )
 
 
 # maximum_sampling_frequency_slider_value = extract_max_frequency_of_signal(random_signal)* user_maximum_sampling_frequency_position 

@@ -75,7 +75,7 @@ def set_slider(max_freq):
 
 # maximum_sampling_frequency_slider_value = extract_max_frequency_of_signal(random_signal)* user_maximum_sampling_frequency_position 
 with st.sidebar:
-   SNR= st_custom_slider('SNR', 0, 20,0,key='SNR')
+   SNR= st.slider('SNR', 0, 20,0,key='SNR')
 
 # Noise function 
 def createNoise(SNR,Signal_v ):

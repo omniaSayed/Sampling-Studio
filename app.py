@@ -8,7 +8,6 @@ import plotly.express as px
 from numpy import sin, cos, pi
 from scipy.fftpack import fft, fftfreq, ifft
 import random
-from streamlit_custom_slider import st_custom_slider
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from plotly.subplots import make_subplots

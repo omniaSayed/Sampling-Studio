@@ -59,8 +59,8 @@ def load_data(select, uploaded_file=None):
         column_names = ['t', 'eeg']
         mvc1 = pd.read_csv('MVC1.txt', sep = ',', names = column_names, skiprows= 50, skipfooter = 50)
     elif select =="Provide A Local File Signal":
-        column_names = ['t','value']
-        mvc1 = pd.read_csv(uploaded_file, sep = ',', names = column_names, skiprows= 50, skipfooter = 50)
+        column_names = ['time','value','frequency','amplitude','phase']
+        mvc1 = pd.read_csv(uploaded_file, sep = ',', names = column_names,header=0)
     return mvc1
 #generating a Random signal function
 def generate_signal(time_domain):
@@ -178,7 +178,13 @@ def noise_sine(index_signal):
         #st.session_state.list_of_signals.append(signal_parameters)
         st.session_state.sum_of_signals=noised_sine_sig
 
-        
+@st.cache
+def convert_df(df):
+    df_of_signals=pd.DataFrame(st.session_state.list_of_signals,columns=['Frequency','Amplitude','Phase'])
+    df_sum_signals=pd.DataFrame({"Time": time, "Value": st.session_state.sum_of_signals})
+    csv_file=pd.concat([df_sum_signals,df_of_signals],axis=1)
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return csv_file.to_csv(index=False).encode('utf-8')      
     
 ################################## Main implementation ###################################################### 
 if selected_signal == "Generate A Random Signal":
@@ -254,6 +260,13 @@ elif selected_signal == 'Generate sine ':
     time = np.linspace(0, 5, 1000)
     with col1:
       genrate_button=st.sidebar.button('genrate',key=0)
+      csv = convert_df(pd.DataFrame(time))
+    st.download_button(
+        label="Download data as CSV",
+        data=csv,
+        file_name='large_df.csv',
+        mime='text/csv',
+    )
     if genrate_button:
         signal_parameters=[frequency,amplitude,phase]
         sine_volt = amplitude * sin(2 * pi * frequency * time + phase)
@@ -282,25 +295,54 @@ elif selected_signal == 'Generate sine ':
         # selected_signal=st.session_state.list_of_signals.index(option)
         noise_sin=st.slider('SNR sine',key="noise_key",on_change=noise_sine,args= (selected_signal,))  
 elif selected_signal == 'Provide A Local File Signal':
+    time = np.linspace(0, 5, 1000)
     uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
     maximum_frequency=500
     set_slider(maximum_frequency)
     if uploaded_file:
         data=load_data( 'Provide A Local File Signal',uploaded_file)
-        fig = px.line(x=data.t, y=data.value)
+        fig = px.line(x=data.time, y=data.value)
         st.plotly_chart(fig)
+        figure=go.Figure()
+        amp=np.array(data.amplitude.dropna())
+        freq=np.array(data.frequency.dropna())
+        phase=np.array(data.phase.dropna())
+        t=np.array(data.time)
+        
+        for i in range(len(data.frequency.dropna())):
+            sine_volt = amp[i] * sin(2 * pi * freq[i] * t + phase[i])
+            st.session_state.list_of_signals
+            figure.add_trace(go.Scatter(x=time,y=sine_volt))
+        st.plotly_chart(figure)
+        # i=0
+        # sine_volt = data.amplitude[i] * sin(2 * pi * data.frequency[i] * data.time + data.phase[i])
+        # sine_volt
+        # time
+        # figure.add_trace(go.Scatter(x=time, y=sine_volt, name='name', mode="lines"))
+        
+        # st.plotly_chart(figure)
+        
+            
+
 
 # --------------------------------------------------------------------------------------------
-SamplingRate = st.slider('sample size', 0, 200, 25)
-frequancy = 20
-time_step = np.linspace(0, 0.5, 200)
-signalWave = np.sin(2*np.pi*frequancy*time_step)
-S_rate = SamplingRate
 
-Time = 1/S_rate
-num_of_samp = np.arange(0, 0.5/Time)
-time_for_sampling = num_of_samp*Time
-SignalWave_for_sampling = np.sin(2*np.pi*frequancy*time_for_sampling)
+
+
+
+
+
+
+# SamplingRate = st.slider('sample size', 0, 200, 25)
+# frequancy = 20
+# time_step = np.linspace(0, 0.5, 200)
+# signalWave = np.sin(2*np.pi*frequancy*time_step)
+# S_rate = SamplingRate
+
+# Time = 1/S_rate
+# num_of_samp = np.arange(0, 0.5/Time)
+# time_for_sampling = num_of_samp*Time
+# SignalWave_for_sampling = np.sin(2*np.pi*frequancy*time_for_sampling)
 
 #extractiong maximum frequency from a signal function
 # def exract_max_frequency_of_signal(input_signal):

@@ -51,7 +51,7 @@ div.bk bl bm bn b1 {
     background-color: aliceblue;
 }
 section.main.css-k1vhr4.egzxvld3{
-    background-color: rgba(235, 236, 236, 0.486);
+    background-color: rgba(83, 83, 85, 0.37);
 }
 .plot-container.plotly {
     border-radius: 30%;
@@ -76,12 +76,17 @@ h1#sampling-studio-for-biological-signals{
     background-color: rgba(2, 2, 46, 0.925);
     border-radius: 3%; 
 }
-button.css-6kekos.edgvbvh9{
+
+button.css-1prua9e.edgvbvh9{
     color: rgb(255, 255, 255);
     font-size: 24px;
-    background-color: rgba(1, 125, 182, 0.603);
-    border-radius: 10%;
+    background-color: rgba(115, 185, 252, 0.719);;
+    border-radius: 5%;
     border-color: rgba(2, 2, 46, 0.925);
     line-height: 1.9;
-    width: 10%;
+    width: 23%;   
+}
+header.css-18ni7ap.e8zbici2{
+    color:rgb(49, 51, 63);
+    display: none;
 }

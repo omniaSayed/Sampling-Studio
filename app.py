@@ -88,6 +88,11 @@ def createNoise(SNR,Signal_v ):
     noise_volts = np.random.normal(mean_noise, np.sqrt(noise_avg_power), len(Signal_v))
     #return noisy signal
     return noise_volts+Signal_v
+def clear_data():
+    st.session_state['list_of_signals']=[]
+    st.session_state['sum_of_signals']=np.zeros(1000)
+    st.session_state['sum_of_signals_clean']=np.zeros(1000)
+    st.session_state['fig_sine']=go.Figure()
 ################################## Ploting functions ###################################################### 
 # plot initialization
 def initialize_plot(fig):
@@ -114,8 +119,7 @@ def add_to_plot(fig,x,y,name):
     )   
     
 #function used to plot the summation of sin signal generated
-def plot(x,y):
-    
+def plot(x,y): 
     df=pd.DataFrame(dict(x=x,y=y))
     fig=(px.line(df,x='x', y='y'))
     fig.update_layout(
@@ -148,43 +152,22 @@ def delete(index_to_delete):
     #remove the signal from the summation 
     removed_signal = amplitude * sin(2 * pi * freq* time + phase)
     st.session_state.sum_of_signals-=removed_signal
+    if not st.session_state.list_of_signals:
+        clear_data()       
 def noise_sine(index_signal):
-    #get parameter to edit add noise
-    # freq= st.session_state.list_of_signals[index_signal][0]
-    # amplitude=st.session_state.list_of_signals[index_signal][1]
-    # phase=st.session_state.list_of_signals[index_signal ][2]
     if st.session_state.noise_key==0:
-    # #     signal_new=amplitude * sin(2 * pi * freq* time + phase)
-    # #     signal_parameters=[freq,amplitude,phase]
-    # #     list_fig_sine_data=list(st.session_state.fig_sine.data)
-    # #     list_fig_sine_data.remove(st.session_state.fig_sine.data[index_signal])
-    # #     st.session_state.fig_sine.data=tuple(list_fig_sine_data)
-    # #     add_to_plot(st.session_state.fig_sine,x=time,y=signal_new,name=f"sin{freq}hz")
-    # #     st.session_state.list_of_signals.append(signal_parameters)
-       st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
+        st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
     else:
-        #remove signal without noise
-        # st.session_state.list_of_signals.pop(index_signal)
-        # list_fig_sine_data=list(st.session_state.fig_sine.data)
-        # list_fig_sine_data.remove(st.session_state.fig_sine.data[index_signal])
-        # st.session_state.fig_sine.data=tuple(list_fig_sine_data)
-        # #Create signal with noise 
-        # removed_signal = amplitude * sin(2 * pi * freq* time + phase)
-        # st.session_state.sum_of_signals-=removed_signal
-        #signal_new=amplitude * sin(2 * pi * freq* time + phase)
         noised_sine_sig=createNoise(st.session_state.noise_key,st.session_state.sum_of_signals_clean ) 
-        #signal_parameters=[freq,amplitude,phase]
-        #add_to_plot(st.session_state.fig_sine,x=time,y=noised_sine_sig,name=f"sin{freq}hz")
-        #st.session_state.list_of_signals.append(signal_parameters)
         st.session_state.sum_of_signals=noised_sine_sig
-
 @st.cache
 def convert_df(df):
     df_of_signals=pd.DataFrame(st.session_state.list_of_signals,columns=['Frequency','Amplitude','Phase'])
+    #df_of_signals
     df_sum_signals=pd.DataFrame({"Time": time, "Value": st.session_state.sum_of_signals})
     csv_file=pd.concat([df_sum_signals,df_of_signals],axis=1)
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return csv_file.to_csv(index=False).encode('utf-8')      
+    return csv_file.to_csv(index=False)      
     
 ################################## Main implementation ###################################################### 
 if selected_signal == "Generate A Random Signal":
@@ -247,8 +230,7 @@ elif selected_signal == "EEG Sample Signal":
         eeg_m=np.array(eeg.eeg)
         noised_signal=createNoise(SNR,eeg_m)
         noise_fig=px.line(noised_signal)
-        st.plotly_chart(noise_fig,use_container_width=True)
-    
+        st.plotly_chart(noise_fig,use_container_width=True)    
 elif selected_signal == 'Generate sine ':
     with st.sidebar:
         #slider to get frequency for sin wave generation
@@ -260,60 +242,70 @@ elif selected_signal == 'Generate sine ':
     time = np.linspace(0, 5, 1000)
     with col1:
       genrate_button=st.sidebar.button('genrate',key=0)
-      csv = convert_df(pd.DataFrame(time))
-    st.download_button(
-        label="Download data as CSV",
-        data=csv,
-        file_name='large_df.csv',
-        mime='text/csv',
-    )
+        #initialize_plot(st.session_state.fig_sine)
     if genrate_button:
         signal_parameters=[frequency,amplitude,phase]
         sine_volt = amplitude * sin(2 * pi * frequency * time + phase)
-        #if SNR==0:
-        add_to_plot(st.session_state.fig_sine,x=time,y=sine_volt,name=f"sin{frequency}hz")
-    
-        
+        add_to_plot(st.session_state.fig_sine,x=time,y=sine_volt,name=f"sin{frequency}hz") 
         st.session_state.list_of_signals.append(signal_parameters)
         st.session_state.sum_of_signals+=sine_volt
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
+    uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
+    add_upload=st.button('add_uploaded')
+    if uploaded_file :
+        st.write('before')
+        if add_upload:
+            data=load_data( 'Provide A Local File Signal',uploaded_file)
+            amp=np.array(data.amplitude.dropna())
+            freq=np.array(data.frequency.dropna())
+            phase=np.array(data.phase.dropna())
+            t=np.array(data.time)
+            for i in range(len(data.frequency.dropna())):
+                
+                sine_volt = amp[i] * sin(2 * pi * freq[i] * t + phase[i])
+                signal_parameters=[freq[i],amp[i],phase[i]]
+                add_to_plot(st.session_state.fig_sine,x=t,y=sine_volt,name=f"sin{freq}hz")
+                st.session_state.list_of_signals.append(signal_parameters)
+            st.session_state.sum_of_signals+=data.value
+            st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
     if st.session_state.list_of_signals:
         option = st.sidebar.selectbox(
         'Select Values to Delete',
         st.session_state.list_of_signals,)
         selected_value=st.session_state.list_of_signals.index(option)
         with col2:
-           delete_button=st.sidebar.button('delete',key=1,on_click=delete,args= (selected_value,))
+            delete_button=st.sidebar.button('delete',key=1,on_click=delete,args= (selected_value,))
+        noise_sin=st.slider('SNR sine',key="noise_key",on_change=noise_sine,args= (selected_signal))  
     with col1:
-          initialize_plot(st.session_state.fig_sine)
+        initialize_plot(st.session_state.fig_sine)
     with col2:
         plot(x=time,y=st.session_state.sum_of_signals)
-    if st.session_state.list_of_signals:
-        # signal_noise= st.sidebar.selectbox(
-        #     'Select Values to be noised',
-        #     st.session_state.list_of_signals)
-        # selected_signal=st.session_state.list_of_signals.index(option)
-        noise_sin=st.slider('SNR sine',key="noise_key",on_change=noise_sine,args= (selected_signal,))  
-elif selected_signal == 'Provide A Local File Signal':
-    time = np.linspace(0, 5, 1000)
-    uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
-    maximum_frequency=500
-    set_slider(maximum_frequency)
-    if uploaded_file:
-        data=load_data( 'Provide A Local File Signal',uploaded_file)
-        fig = px.line(x=data.time, y=data.value)
-        st.plotly_chart(fig)
-        figure=go.Figure()
-        amp=np.array(data.amplitude.dropna())
-        freq=np.array(data.frequency.dropna())
-        phase=np.array(data.phase.dropna())
-        t=np.array(data.time)
+    csv = convert_df(pd.DataFrame(time))
+    st.download_button(
+        label="Download data as CSV",
+        data=csv,
+        file_name='large_df.csv',
+        mime='text/csv',
+    )
+        #uploaded_file =0
+# elif selected_signal == 'Provide A Local File Signal':
+#     time = np.linspace(0, 5, 1000)
+#     uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
+#     if uploaded_file:
+#         data=load_data( 'Provide A Local File Signal',uploaded_file)
+#         fig = px.line(x=data.time, y=data.value)
+#         st.plotly_chart(fig)
+#         figure=go.Figure()
+#         amp=np.array(data.amplitude.dropna())
+#         freq=np.array(data.frequency.dropna())
+#         phase=np.array(data.phase.dropna())
+#         t=np.array(data.time)
         
-        for i in range(len(data.frequency.dropna())):
-            sine_volt = amp[i] * sin(2 * pi * freq[i] * t + phase[i])
-            st.session_state.list_of_signals
-            figure.add_trace(go.Scatter(x=time,y=sine_volt))
-        st.plotly_chart(figure)
+#         for i in range(len(data.frequency.dropna())):
+#             sine_volt = amp[i] * sin(2 * pi * freq[i] * t + phase[i])
+#             st.session_state.list_of_signals
+#             figure.add_trace(go.Scatter(x=time,y=sine_volt))
+#         st.plotly_chart(figure)
         # i=0
         # sine_volt = data.amplitude[i] * sin(2 * pi * data.frequency[i] * data.time + data.phase[i])
         # sine_volt

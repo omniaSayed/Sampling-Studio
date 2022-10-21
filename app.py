@@ -33,6 +33,8 @@ selected_signal = st.sidebar.selectbox('Provided Signals', ['Generate A Random S
 def set_slider(max_freq):
         st.slider('Change Sampling Maximum Frequency ', 1,3*max_freq )
 col1, col2 = st.columns(2)
+col3,col4=st.columns((3,1))
+
 ################################## Adding variables to session ######################################################
 if 'list_of_signals' not in st.session_state:
     st.session_state['list_of_signals']=[]
@@ -100,7 +102,7 @@ def initialize_plot(fig):
     autosize=False,
     width=500,
     height=500,
-    title_text="Veiwing Waves addition",
+    title_text="Generated Sin Waves",
     margin=dict(
         l=50,
         r=50,
@@ -126,7 +128,7 @@ def plot(x,y):
     autosize=False,
     width=500,
     height=500,
-    title_text="Veiwing sine waves",
+    title_text="Addition of Sin Waves",
     margin=dict(
         l=50,
         r=50,
@@ -154,7 +156,7 @@ def delete(index_to_delete):
     st.session_state.sum_of_signals-=removed_signal
     if not st.session_state.list_of_signals:
         clear_data()       
-def noise_sine(index_signal):
+def noise_sine():
     if st.session_state.noise_key==0:
         st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
     else:
@@ -250,24 +252,26 @@ elif selected_signal == 'Generate sine ':
         st.session_state.list_of_signals.append(signal_parameters)
         st.session_state.sum_of_signals+=sine_volt
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
+   
     uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
-    add_upload=st.button('add_uploaded')
-    if uploaded_file :
-        st.write('before')
-        if add_upload:
-            data=load_data( 'Provide A Local File Signal',uploaded_file)
-            amp=np.array(data.amplitude.dropna())
-            freq=np.array(data.frequency.dropna())
-            phase=np.array(data.phase.dropna())
-            t=np.array(data.time)
-            for i in range(len(data.frequency.dropna())):
-                
-                sine_volt = amp[i] * sin(2 * pi * freq[i] * t + phase[i])
-                signal_parameters=[freq[i],amp[i],phase[i]]
-                add_to_plot(st.session_state.fig_sine,x=t,y=sine_volt,name=f"sin{freq}hz")
-                st.session_state.list_of_signals.append(signal_parameters)
-            st.session_state.sum_of_signals+=data.value
-            st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
+    with col4:
+        add_upload=st.button('Add')
+        if uploaded_file :
+            st.write('before')
+            if add_upload:
+                data=load_data( 'Provide A Local File Signal',uploaded_file)
+                amp=np.array(data.amplitude.dropna())
+                freq=np.array(data.frequency.dropna())
+                phase=np.array(data.phase.dropna())
+                t=np.array(data.time)
+                for i in range(len(data.frequency.dropna())):
+                    
+                    sine_volt = amp[i] * sin(2 * pi * freq[i] * t + phase[i])
+                    signal_parameters=[freq[i],amp[i],phase[i]]
+                    add_to_plot(st.session_state.fig_sine,x=t,y=sine_volt,name=f"sin{freq}hz")
+                    st.session_state.list_of_signals.append(signal_parameters)
+                st.session_state.sum_of_signals+=data.value
+                st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
     if st.session_state.list_of_signals:
         option = st.sidebar.selectbox(
         'Select Values to Delete',
@@ -275,18 +279,20 @@ elif selected_signal == 'Generate sine ':
         selected_value=st.session_state.list_of_signals.index(option)
         with col2:
             delete_button=st.sidebar.button('delete',key=1,on_click=delete,args= (selected_value,))
-        noise_sin=st.slider('SNR sine',key="noise_key",on_change=noise_sine,args= (selected_signal))  
+    noise_sin=st.sidebar.slider('SNR sine',key="noise_key",on_change=noise_sine)  
     with col1:
         initialize_plot(st.session_state.fig_sine)
     with col2:
         plot(x=time,y=st.session_state.sum_of_signals)
     csv = convert_df(pd.DataFrame(time))
-    st.download_button(
-        label="Download data as CSV",
-        data=csv,
-        file_name='large_df.csv',
-        mime='text/csv',
-    )
+    with col3:
+        st.download_button(
+            label="Download ",
+            data=csv,
+            file_name='large_df.csv',
+            mime='text/csv',
+        )
+        st.sidebar.button("Clear",on_click=clear_data)
         #uploaded_file =0
 # elif selected_signal == 'Provide A Local File Signal':
 #     time = np.linspace(0, 5, 1000)

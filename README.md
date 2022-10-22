@@ -1,15 +1,19 @@
-# Interactive-Dashboards-With-Streamlit
-Create Interactive Dashboards With Streamlit in Python - a short **Coursera** project
-
-The project involves creation of a webapp using python scripts, and demostrating the data and analyses on the same. The analysis involved is sentiment analysis.
-
-### Components:-
-1. Build interactive data dashboards with Streamlit and Python
-2. Use pandas for data manipulation in data science workflows
-3. Create interactive plots with Plotly Python
-
-### Dashboard Snippets
-
+# Sampling studio
+Team Members:
+>
+* Omnia elsayed 
+* Sama Mostafa 
+* Mariam Ahmed
+* Mariam Hossam  
+>
+Project functions
+>Open biological Signal and plot them 
+* ECG signal 
+* EMG signal
+>Generate random signals 
+>Generate different sine waves and plot each signal and plot the sum of sine waves generated
+>Create Noise using SNR ratio 
+> Sampling and reconstruct signal using sinc interpolation
 ![Histogram](https://github.com/singhishita/Interactive-Dashboards-With-Streamlit/blob/master/histogram.png)
 
 ![Pie Chart](https://github.com/singhishita/Interactive-Dashboards-With-Streamlit/blob/master/piechart.png)

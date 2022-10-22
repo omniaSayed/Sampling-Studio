@@ -7,8 +7,7 @@ Team Members:
 * Mariam Hossam  
 >
 Project functions
->Open biological Signal and plot them 
-* ECG signal 
+>Open biological Signal and plot them  
 * EMG signal
 >Generate random signals 
 >Generate different sine waves and plot each signal and plot the sum of sine waves generated

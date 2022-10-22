@@ -28,13 +28,14 @@ st.markdown(" Welcome To Our Sampling Studio ")
 st.sidebar.title("Sampling Settings")
 #Add elements to side bar
     #select box used to determine type pf provided signals
-selected_signal = st.sidebar.selectbox('Provided Signals', ['Generate A Random Signal', 'EKG Sample Signal', 'ECG Sample Signal', 'EMG Sample Signal', 'EEG Sample Signal', 'Generate sine ', 'remove','Provide A Local File Signal'])
+selected_signal = st.sidebar.selectbox('Provided Signals', ['Generate A Random Signal', 'EKG Sample Signal', 'ECG Sample Signal', 'EMG Sample Signal', 'EEG Sample Signal', 'Generate sine '])
     #slider to provide maximum frequency of signal for sampling process
 def set_slider(max_freq):
         st.slider('Change Sampling Maximum Frequency ', 1,3*max_freq )
+layout=st.sidebar.columns([2,1])
 col1, col2 = st.columns(2)
-col3,col4=st.columns((3,1))
-
+col=st.columns([3,1])
+col3=st.columns([3,1])
 ################################## Adding variables to session ######################################################
 if 'list_of_signals' not in st.session_state:
     st.session_state['list_of_signals']=[]
@@ -45,6 +46,7 @@ if 'list_of_signals' not in st.session_state:
 #cash using(mini memory for the front end)
 @st.cache(persist=True)
 ################################## Function implementation  ######################################################
+################################################################################################################################################
 #Read and load data to be plotted function
 def load_data(select, uploaded_file=None):
     if select == "EMG Sample Signal":
@@ -64,19 +66,22 @@ def load_data(select, uploaded_file=None):
         column_names = ['time','value','frequency','amplitude','phase']
         mvc1 = pd.read_csv(uploaded_file, sep = ',', names = column_names,header=0)
     return mvc1
+################################################################################################################################################
 #generating a Random signal function
 def generate_signal(time_domain):
-    F1 = random.randint(1, 100)
-    F2 = random.randint(1, 100)
-    randomly_generated_signal =(2*sin(2*pi*F1*time_domain)) + (4*sin(2*pi*F2*time_domain))
+    #generate random frequency
+    Frequency1 = random.randint(1, 100)
+    Frequency2 = random.randint(1, 100)
+    randomly_generated_signal =(2*sin(2*pi*Frequency1*time_domain)) + (4*sin(2*pi*Frequency2*time_domain))
     #Adding Guassian Noise
     randomly_generated_signal += (3*np.random.randn(time_domain.size))
     print('Noise added')
     return randomly_generated_signal
+################################################################################################################################################
 # Noise function 
-def createNoise(SNR,Signal_v ):
+def createNoise(SNR,Signal_volt ):
     # calculate power in watto off signal 
-    Signal_power=Signal_v**2
+    Signal_power=Signal_volt**2
     # calculate avarage power of signal
     Signal_avg_power=np.mean(Signal_power)
     # change signal into db
@@ -87,17 +92,22 @@ def createNoise(SNR,Signal_v ):
     # Generate an sample of white noise
     mean_noise = 0
     #Generate random guassian noise
-    noise_volts = np.random.normal(mean_noise, np.sqrt(noise_avg_power), len(Signal_v))
+    noise_volts = np.random.normal(mean_noise, np.sqrt(noise_avg_power), len(Signal_volt))
     #return noisy signal
-    return noise_volts+Signal_v
+    return noise_volts+Signal_volt
+################################################################################################################################################
+#function used to clear all ploted sine signals
 def clear_data():
+    #assign all values to zero
     st.session_state['list_of_signals']=[]
     st.session_state['sum_of_signals']=np.zeros(1000)
     st.session_state['sum_of_signals_clean']=np.zeros(1000)
     st.session_state['fig_sine']=go.Figure()
-################################## Ploting functions ###################################################### 
-# plot initialization
+################################## Ploting functions ######################################################
+################################################################################################################################################
+# function used for  initialization used for ploting different sine waves
 def initialize_plot(fig):
+    #updating plot layout by changing color ,adding titles to plot ....
     fig.update_layout(
     autosize=False,
     width=500,
@@ -113,17 +123,20 @@ def initialize_plot(fig):
     paper_bgcolor="white",
     font_color="black",
 )
+    #ploting wave using plotly
     st.plotly_chart(fig,use_container_width=True)
-#function used to add signal to same plot
+################################################################################################################################################
+#function used to add each sine wave generated  to the same plot
 def add_to_plot(fig,x,y,name):
         fig.add_trace(
         go.Scatter(x=x, y=y, name=name)
-    )   
-    
-#function used to plot the summation of sin signal generated
+    ) 
+################################################################################################################################################      
+#function used to plot the addation  of sin signal generated
 def plot(x,y): 
     df=pd.DataFrame(dict(x=x,y=y))
     fig=(px.line(df,x='x', y='y'))
+    #update layout 
     fig.update_layout(
     autosize=False,
     width=500,
@@ -140,29 +153,33 @@ def plot(x,y):
     font_color="black",
 )
     st.plotly_chart(fig,use_container_width=True)
+################################################################################################################################################
 #function used to delete signals from the plot
 def delete(index_to_delete):
     #get the values that make up the signal to be deleted from list then delete it
-    freq= st.session_state.list_of_signals[index_to_delete][0]
-    amplitude=st.session_state.list_of_signals[index_to_delete][1]
-    phase=st.session_state.list_of_signals[index_to_delete][2]
-    st.session_state.list_of_signals.pop(index_to_delete)
-    #turn the tuple data of the figure into list and back to be able to remove the figure of the signal
+    freq= st.session_state.list_of_signals[index_to_delete][0] #get frequency of  signal to be deleted
+    amplitude=st.session_state.list_of_signals[index_to_delete][1]#get frequency of  signal to be deleted
+    phase=st.session_state.list_of_signals[index_to_delete][2]#get phase of  signal to be deleted
+    st.session_state.list_of_signals.pop(index_to_delete)#remove the ddesired signal parameter from session state
+    #turn the tuple data of the figure into list and back to be able to remove the figure of the signal from plot
     list_fig_sine_data=list(st.session_state.fig_sine.data)
     list_fig_sine_data.remove(st.session_state.fig_sine.data[index_to_delete])
     st.session_state.fig_sine.data=tuple(list_fig_sine_data)
-    #remove the signal from the summation 
+    #remove the signal from the summation of sine signals
     removed_signal = amplitude * sin(2 * pi * freq* time + phase)
     st.session_state.sum_of_signals-=removed_signal
     if not st.session_state.list_of_signals:
-        clear_data()       
+        clear_data()
+#################################################################################################################################################   
 def noise_sine():
+    #if the value of the SNR is zero then there is no noise in the signal 
     if st.session_state.noise_key==0:
         st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
     else:
+        #add noise to summation of signals
         noised_sine_sig=createNoise(st.session_state.noise_key,st.session_state.sum_of_signals_clean ) 
         st.session_state.sum_of_signals=noised_sine_sig
-@st.cache
+######################################################################################################################################################
 def convert_df(df):
     df_of_signals=pd.DataFrame(st.session_state.list_of_signals,columns=['Frequency','Amplitude','Phase'])
     #df_of_signals
@@ -217,7 +234,9 @@ elif selected_signal == "ECG Sample Signal":
         ecg_m=np.array(ecg[0:300])
         noised_signal=createNoise(SNR,ecg_m)
         noise_fig=px.line(noised_signal)
+        noise_fig.update_traces(line_color="blue")
         st.plotly_chart(noise_fig,use_container_width=True)
+        
 
 elif selected_signal == "EEG Sample Signal":
     #slider to get signal to noise ratio
@@ -242,8 +261,7 @@ elif selected_signal == 'Generate sine ':
         #slider to get phase for sin wave generation
         phase = st.slider('Phase', 0, 20, 0, key='Phase')
     time = np.linspace(0, 5, 1000)
-    with col1:
-      genrate_button=st.sidebar.button('genrate',key=0)
+    genrate_button=st.sidebar.button('Genrate Sin',key=0)
         #initialize_plot(st.session_state.fig_sine)
     if genrate_button:
         signal_parameters=[frequency,amplitude,phase]
@@ -252,12 +270,11 @@ elif selected_signal == 'Generate sine ':
         st.session_state.list_of_signals.append(signal_parameters)
         st.session_state.sum_of_signals+=sine_volt
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
-   
-    uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
-    with col4:
-        add_upload=st.button('Add')
+    with col3[0]:
+        uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
+    with col3[-1]:
+        add_upload=st.button('Add File')
         if uploaded_file :
-            st.write('before')
             if add_upload:
                 data=load_data( 'Provide A Local File Signal',uploaded_file)
                 amp=np.array(data.amplitude.dropna())
@@ -285,14 +302,15 @@ elif selected_signal == 'Generate sine ':
     with col2:
         plot(x=time,y=st.session_state.sum_of_signals)
     csv = convert_df(pd.DataFrame(time))
-    with col3:
+    with layout[0]:
         st.download_button(
             label="Download ",
             data=csv,
             file_name='large_df.csv',
             mime='text/csv',
         )
-        st.sidebar.button("Clear",on_click=clear_data)
+    with layout[-1]:
+        st.button("Clear",on_click=clear_data)
         #uploaded_file =0
 # elif selected_signal == 'Provide A Local File Signal':
 #     time = np.linspace(0, 5, 1000)

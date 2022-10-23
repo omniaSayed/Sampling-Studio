@@ -22,10 +22,14 @@ st.markdown(" Welcome To Our Sampling Studio ")
 st.sidebar.title("Sampling Settings")
 #Add elements to side bar
     #select box used to determine type pf provided signals
-selected_signal = st.sidebar.selectbox('Provided Signals', ['Generate A Random Signal', 'EMG Sample Signal', 'Generate sine '])
+selected_signal = st.sidebar.selectbox('Provided Signals', ['EMG Sample Signal', 'Generate sine '])
     #slider to provide maximum frequency of signal for sampling process
 def set_slider(max_freq):
-        user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Maximum Frequency ', 1,max_freq )
+        if calculate_max_frequency()==0:
+            Nyquist_rate=1
+        else:
+            Nyquist_rate=calculate_max_frequency()*2
+        user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Maximum Frequency ', 1,max_freq,value=int(Nyquist_rate),key=12 )
         return user_selected_sampling_frequency
 #global_variables
 layout=st.sidebar.columns(2)
@@ -53,16 +57,6 @@ def load_data(select, uploaded_file=None):
         column_names = ['time','value','frequency','amplitude','phase']
         returned_signal = pd.read_csv(uploaded_file, sep = ',', names = column_names,header=0)
     return returned_signal
-#generating a Random signal function
-def generate_signal(sample_time_domain):
-    F1 = 2
-    F2 = 6
-    randomly_generated_signal =(2*np.sin(2*np.pi*F1*sample_time_domain)) + (4*np.sin(2*np.pi*F2*sample_time_domain))
-    # #Adding Guassian Noise
-    # randomly_generated_signal += (np.random.randn(time_domain.size))
-    random_signal_dataframe = pd.DataFrame(data = [np.array(sample_time_domain),np.array(randomly_generated_signal)]).T
-    random_signal_dataframe.columns = ['time', 'values']
-    return random_signal_dataframe
 ################################################################################################################################################
 # Noise function 
 def signal_sampling(input_signal, sampling_frequency):
@@ -163,12 +157,23 @@ def convert_data_to_csv():
     #add both of the data frames and the sum together horizontally
     csv_file=pd.concat([df_sum_signals,df_of_signals],axis=1)
     return csv_file.to_csv(index=False)
+######################################################################################################################################################
+def calculate_max_frequency():
+    frequencies=[]
+    for i in range(len(st.session_state.list_of_signals)):
+        frequencies.append(st.session_state.list_of_signals[i][0])
+    if frequencies:
+        return max(frequencies)
+    else:
+        return 0
 ################################## Ploting functions ######################################################
 ################################################################################################################################################
 # function used to update used for ploting different sine waves
 def update_plot(fig):
     #updating plot layout by changing color ,adding titles to plot ....
     fig.update_layout(
+    xaxis_title="Time", 
+    yaxis_title="Amplitude",
     autosize=False,
     width=500,
     height=500,
@@ -194,8 +199,8 @@ def add_to_plot(fig,x,y,name):
 ################################################################################################################################################      
 #function used to plot the addation  of sin signal generated
 def update_sum_plot(x,y): 
-    df=pd.DataFrame(dict(x=x,y=y))
-    fig=(px.line(df,x='x', y='y'))
+    df=pd.DataFrame(dict(Time=x,Amplitude=y))
+    fig=(px.line(df,x='Time', y='Amplitude'))
     #update layout 
     fig.update_layout(
     autosize=False,
@@ -217,33 +222,9 @@ def update_sum_plot(x,y):
 
 
 ################################## Main implementation ######################################################
-if selected_signal == "Generate A Random Signal":
-    sampling_frequecny_applied = set_slider(100)
-    random_signal = generate_signal(np.linspace(0,1, 1000))
-    SNR= st.sidebar.slider('SNR', 0, 20,0,key='SNR')
-    if SNR==0 :
-        origianal_signal_plot = px.line(random_signal, x = random_signal['time'], y = random_signal['values'])
-        sampled_signal_points, sampled_signal_time_domain = signal_sampling(random_signal, sampling_frequecny_applied)
-        interpolated_signal= sinc_interp(random_signal, sampled_signal_time_domain)
-        resample_signal_plot = px.line(interpolated_signal)
-        with graph1:
-            st.plotly_chart(origianal_signal_plot, use_container_width=True, height = 100, width = 100)
-        with graph2:
-            st.plotly_chart(resample_signal_plot,  use_container_width=True, height = 100, width = 100)
-    else:
-        noised_signal,time_domain=createNoise(SNR,random_signal)
-        noised_signal_dataFrame=pd.DataFrame(data = [np.array(time_domain),np.array(noised_signal)]).T
-        noised_signal_dataFrame.columns=['time','values']
-        sampled_signal_points, sampled_signal_time_domain = signal_sampling(noised_signal_dataFrame, sampling_frequecny_applied)
-        interpolated_signal = sinc_interp(noised_signal_dataFrame, sampled_signal_time_domain)
-        fig_resample = px.line(interpolated_signal)
-        noise_fig = px.line(x=time_domain,y=noised_signal)
-        with graph1:
-            st.plotly_chart(noise_fig,use_container_width=True)
-        with graph2:
-            st.plotly_chart(fig_resample,use_container_width=True)
 
-elif selected_signal == "EMG Sample Signal":
+
+if selected_signal == "EMG Sample Signal":
     emg = load_data(selected_signal)
     emg = emg[0:1001]
     sampling_frequecny_applied = set_slider(400)
@@ -283,7 +264,7 @@ elif selected_signal == 'Generate sine ':
         phase = st.slider('Phase', 0, 360, 0, key='Phase')
     genrate_button=st.sidebar.button('Genrate Sin',key=0)
         #initialize_plot(st.session_state.fig_sine)
-    sampling_frequecny_applied = set_slider(400)
+    
     if genrate_button:
         #calculate the sin of the values retrived then draw it
         sine_volt = amplitude * sin(2 * pi * frequency * time + phase*pi/180)
@@ -295,7 +276,7 @@ elif selected_signal == 'Generate sine ':
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
     #UPLOADING A GENRATED FILE
     with graph4:
-        uploaded_file = st.file_uploader("Please choose a CSV or TXT file", accept_multiple_files=False,type=['csv','txt'])
+        uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
 
         #add a button to add uploaded file
     with graph4:
@@ -329,14 +310,17 @@ elif selected_signal == 'Generate sine ':
         selected_value=st.session_state.list_of_signals.index(option)
         with col2:
             #if the button is pressed go the delete function
-            delete_button=st.sidebar.button('delete',key=1,on_click=delete,args= (selected_value,))
+            delete_button=st.sidebar.button('Delete',key=1,on_click=delete,args= (selected_value,))
         #if the slider of the noise changes then go noise func
-        noise_sin=st.sidebar.slider('SNR sine',key="noise_slider_key",on_change=noise_sine)  
+        noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
         #after every change from the upload, delete or genrate we update both plots
     with col1:
         update_plot(st.session_state.fig_sine)
     with col2:
         update_sum_plot(x=time,y=st.session_state.sum_of_signals)
+    
+    sampling_frequecny_applied = set_slider(80)
+
     sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
     sine_signal_dataFrame.columns=['time','values']
     sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
@@ -348,8 +332,9 @@ elif selected_signal == 'Generate sine ':
         st.download_button(
             label="Save ",
             data=convert_data_to_csv(),
-            file_name='large_df.csv',
+            file_name='Sample.csv',
             mime='text/csv',
         )
     with layout[-1]:
         st.button("Clear",on_click=clear_data)
+    

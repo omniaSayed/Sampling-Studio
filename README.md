@@ -11,6 +11,7 @@ Project functions
 * EMG signal
 >Generate random signals 
 >![Screen_shot](https://i.imgur.com/IJEEmEV.png)
+>![Screen_shot](https://i.imgur.com/oYjTcoH.png)
 >Generate different sine waves and plot each signal and plot the sum of sine waves generated
 >
 >Create Noise using SNR ratio 

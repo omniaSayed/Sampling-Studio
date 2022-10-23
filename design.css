@@ -84,14 +84,22 @@ button.css-6kekos.edgvbvh9{
     line-height: 1.6;
     width: 30%;
 }
+button.css-6kekos.edgvbvh9#Add file{
+    color: rgb(255, 255, 255);
+    font-size: 24px;
+    background-color: rgba(255, 255, 255, 0.603);
+    border-radius: 5%;
+    line-height: 1.6;
+    width: 30%;
+}
 button.css-1prua9e.edgvbvh9{
     color: rgb(255, 255, 255);
     font-size: 24px;
-    background-color: rgba(115, 185, 252, 0.719);;
+    background-color: rgba(115, 185, 252, 0.719);
     border-radius: 5%;
     border-color: rgba(2, 2, 46, 0.925);
     line-height: 1.9;
-    width: 55%;   
+    width: 25%;   
 }
 header.css-18ni7ap.e8zbici2{
     color:rgb(49, 51, 63);
@@ -99,4 +107,13 @@ header.css-18ni7ap.e8zbici2{
 }
 section.css-po3vlj.exg6vvm15{
 size: 2px;
+}
+.css-1djdyxw.ek41t0m0{
+    color: rgb(255, 255, 255);
+    font-size: 24px;
+    font-family: sans-serif;
+}
+.st-ca {
+    background-color: rgba(224, 233, 241, 0.555);
+    size: 24px; 
 }

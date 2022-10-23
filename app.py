@@ -1,4 +1,6 @@
 ################################## Essential imports ######################################################
+from matplotlib.ft2font import HORIZONTAL
+from matplotlib.pyplot import margins
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,6 +8,7 @@ import plotly.express as px
 import plotly.express as px
 from numpy import sin, pi
 import plotly.graph_objects as go
+from streamlit_option_menu import option_menu
 ################################## Page Layouts ######################################################
 st.set_page_config(
     page_title="Sampling Dashboard",
@@ -17,24 +20,42 @@ st.set_page_config(
 with open("design.css")as f:
     st.markdown(f"<style>{f.read() }</style>",unsafe_allow_html=True)
 #Add title
-st.title("Sampling Studio For Biological Signals")
-st.markdown(" Welcome To Our Sampling Studio ")
+# st.title("Sampling Studio For Biological Signals")
+# st.markdown(" Welcome To Our Sampling Studio ")
 st.sidebar.title("Sampling Settings")
 #Add elements to side bar
     #select box used to determine type pf provided signals
-selected_signal = st.sidebar.selectbox('Provided Signals', ['EMG Sample Signal', 'Generate sine '])
+#selected_signal = st.sidebar.selectbox('Provided Signals', ['EMG Sample Signal', 'Generate sine '])
+
     #slider to provide maximum frequency of signal for sampling process
 def set_slider(max_freq):
-        if calculate_max_frequency()==0:
-            Nyquist_rate=1
-        else:
-            Nyquist_rate=calculate_max_frequency()*2
-        user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Maximum Frequency ', 1,max_freq,value=int(Nyquist_rate),key=12 )
-        return user_selected_sampling_frequency
-#global_variables
-layout=st.sidebar.columns(2)
+            if calculate_max_frequency()==0:
+                Nyquist_rate=1
+            else:
+                Nyquist_rate=calculate_max_frequency()*2
+           
+            user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Maximum Frequency ', 1,max_freq,value=int(Nyquist_rate),key=12 )
+            return user_selected_sampling_frequency
+selected_signal=option_menu(
+    menu_title=None,
+    options=["Generate sine","upload signal","EMG Sample Signal"],
+    default_index=0,
+    orientation="horizontal",
+     styles={
+                "container": {"padding": "0!important", "background-color": "rgba(2, 2, 46, 0.925)",},
+                "icon": {"color": "white", "font-size": "20px"},
+                "nav-link": {
+                    "font-size": "20px",
+                    "text-align": "center",
+                    "margin": "0px",
+                    "--hover-color": "rgba(177, 199, 219, 0.555)",
+                    "color": "white",
+                },
+                "nav-link-selected": {"background-color": "rgba(114, 171, 218, 0.651)"},
+            },
+)
 graph1, graph2 = st.columns((1, 1))
-col3,col4=st.columns((3,1))
+col3,col4=st.columns((27,24))
 col1, col2 = st.columns(2)
 graph3,graph4=st.columns((26,27))
 ################################## Adding variables to session ######################################################
@@ -218,11 +239,36 @@ def update_sum_plot(x,y):
     font_color="black",
 )
     st.plotly_chart(fig,use_container_width=True)
-
-
+def generate_sine():
+        sine_volt = st.session_state.Amplitude * sin(2 * pi * st.session_state.Frequency * time + st.session_state.Phase*pi/180)
+        add_to_plot(st.session_state.fig_sine,x=time,y=sine_volt,name=f"{frequency}hz") 
+        #add the signal to the cache storage
+        signal_parameters=[st.session_state.Frequency,st.session_state.Amplitude,st.session_state.Phase]
+        st.session_state.list_of_signals.append(signal_parameters)
+        st.session_state.sum_of_signals+=sine_volt
+        st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
+def delete_sine():
+    if st.session_state.list_of_signals:
+        option = st.sidebar.selectbox(
+        'Select Values to Delete',
+        st.session_state.list_of_signals,format_func=lambda x: "Frequency:" + str(x[0])+", Amplitude:" + str(x[1])+", Phase:" + str(x[2]))
+        selected_value=st.session_state.list_of_signals.index(option)
+        with col2:
+            #if the button is pressed go the delete function
+            delete_button=st.sidebar.button('Delete',key=1,on_click=delete,args= (selected_value,))
+        
+        #after every change from the upload, delete or genrate we update both plots
+def add_sampling_sine():
+    sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
+    sine_signal_dataFrame.columns=['time','values']
+    sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
+    interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
+    resample_signal_plot = px.line(interpolated_signal)  
+    with graph3:   
+        st.plotly_chart(resample_signal_plot,  use_container_width=True, height = 100, width = 100)
 
 ################################## Main implementation ######################################################
-
+time = np.linspace(0, 5, 1000)
 
 if selected_signal == "EMG Sample Signal":
     emg = load_data(selected_signal)
@@ -253,34 +299,59 @@ if selected_signal == "EMG Sample Signal":
         with graph2:
             st.plotly_chart(fig_resample,use_container_width=True)
 
-elif selected_signal == 'Generate sine ':
-    time = np.linspace(0, 5, 1000)
+elif selected_signal == "Generate sine":
     with st.sidebar:
+        signal_options = st.checkbox('Generating options')
+        signal_noise = st.checkbox('Noise')
+        signal_save = st.checkbox('Save')
+        signal_delete = st.checkbox('Delete')
+        if signal_options:
         #slider to get frequency for sin wave generation
-        frequency = st.slider('Frequency', 0.0, 20.0, step=0.5, key='Frequency')
-        #slider to get amplitude for sin wave generation
-        amplitude = st.slider('Amplitude', 0, 20, 0, key='Amplitude')
-        #slider to get phase for sin wave generation
-        phase = st.slider('Phase', 0, 360, 0, key='Phase')
-    genrate_button=st.sidebar.button('Genrate Sin',key=0)
-        #initialize_plot(st.session_state.fig_sine)
+            frequency = st.slider('Frequency', 0.0, 20.0, step=0.5, key='Frequency',on_change=generate_sine)
+            #slider to get amplitude for sin wave generation
+            amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=generate_sine)
+            #slider to get phase for sin wave generation
+            phase = st.slider('Phase', 0, 360, 0, key='Phase',on_change=generate_sine)
+        with col1:
+            update_plot(st.session_state.fig_sine)
+        with col2:
+            update_sum_plot(x=time,y=st.session_state.sum_of_signals)
+        if signal_noise: 
+            noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine) 
+        sampling_frequecny_applied = set_slider(80)
+        add_sampling_sine()
+        if signal_delete:     
+            delete_sine() 
+            st.button("Clear",on_click=clear_data)
+        if signal_save:
+            st.download_button(
+                    label="Save ",
+                    data=convert_data_to_csv(),
+                    file_name='Sample.csv',
+                    mime='text/csv',
+                )
+            
     
-    if genrate_button:
-        #calculate the sin of the values retrived then draw it
-        sine_volt = amplitude * sin(2 * pi * frequency * time + phase*pi/180)
-        add_to_plot(st.session_state.fig_sine,x=time,y=sine_volt,name=f"{frequency}hz") 
-        #add the signal to the cache storage
-        signal_parameters=[frequency,amplitude,phase]
-        st.session_state.list_of_signals.append(signal_parameters)
-        st.session_state.sum_of_signals+=sine_volt
-        st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
-    #UPLOADING A GENRATED FILE
-    with graph4:
-        uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
-
         #add a button to add uploaded file
-    with graph4:
-        add_upload=st.button('Add file')
+elif selected_signal == "upload signal":
+        with st.sidebar:
+            signal_options = st.checkbox('Generating options')
+            signal_noise = st.checkbox('Noise')
+            signal_save = st.checkbox('Save')
+            signal_delete = st.checkbox('Delete')
+        if signal_options:
+            with st.sidebar:
+                #slider to get frequency for sin wave generation
+                frequency = st.slider('Frequency', 0.0, 20.0, step=0.5, key='Frequency',on_change=generate_sine)
+                #slider to get amplitude for sin wave generation
+                amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=generate_sine)
+                #slider to get phase for sin wave generation
+                phase = st.slider('Phase', 0, 360, 0, key='Phase',on_change=generate_sine)
+        #UPLOADING A GENRATED FILE
+        with col3:
+            uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
+        with col4:
+            add_upload=st.button('Add file')
             #if there's a file uploaded and the button is pressed
         if uploaded_file and add_upload :
                 #download the data to the browser
@@ -298,43 +369,27 @@ elif selected_signal == 'Generate sine ':
                     #add the parameters to the stored data 
                     signal_parameters=[frequencies_of_downloaded_signal[i],amplitudes_of_downloaded_signal[i],phases_of_downloaded_signal[i]]
                     st.session_state.list_of_signals.append(signal_parameters)
-            
             #add the values(y-axis) to the stored sum
                 st.session_state.sum_of_signals+=data.value
                 st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
-    
-    if st.session_state.list_of_signals:
-        option = st.sidebar.selectbox(
-        'Select Values to Delete',
-        st.session_state.list_of_signals,format_func=lambda x: "Frequency:" + str(x[0])+", Amplitude:" + str(x[1])+", Phase:" + str(x[2]))
-        selected_value=st.session_state.list_of_signals.index(option)
+        with col1:
+            update_plot(st.session_state.fig_sine)
         with col2:
-            #if the button is pressed go the delete function
-            delete_button=st.sidebar.button('Delete',key=1,on_click=delete,args= (selected_value,))
-        #if the slider of the noise changes then go noise func
-        noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
-        #after every change from the upload, delete or genrate we update both plots
-    with col1:
-        update_plot(st.session_state.fig_sine)
-    with col2:
-        update_sum_plot(x=time,y=st.session_state.sum_of_signals)
-    
-    sampling_frequecny_applied = set_slider(80)
-
-    sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
-    sine_signal_dataFrame.columns=['time','values']
-    sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
-    interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
-    resample_signal_plot = px.line(interpolated_signal)  
-    with graph3:   
-        st.plotly_chart(resample_signal_plot,  use_container_width=True, height = 100, width = 100)
-    with layout[0]:
-        st.download_button(
-            label="Save ",
-            data=convert_data_to_csv(),
-            file_name='Sample.csv',
-            mime='text/csv',
-        )
-    with layout[-1]:
-        st.button("Clear",on_click=clear_data)
-    
+            update_sum_plot(x=time,y=st.session_state.sum_of_signals)
+    #if the slider of the noise changes then go noise func
+        if signal_noise: 
+            noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
+        sampling_frequecny_applied = set_slider(80)
+        add_sampling_sine()
+        if signal_delete:     
+            delete_sine() 
+            st.sidebar.button("Clear",on_click=clear_data)
+        if signal_save:
+            st.download_button(
+                    label="Save ",
+                    data=convert_data_to_csv(),
+                    file_name='Sample.csv',
+                    mime='text/csv',
+                )
+            
+        

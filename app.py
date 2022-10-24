@@ -63,7 +63,9 @@ if 'list_of_signals' not in st.session_state:
     st.session_state['list_of_signals']=[]
     st.session_state['sum_of_signals']=np.zeros(1000)
     st.session_state['sum_of_signals_clean']=np.zeros(1000)
-    st.session_state['fig_sine']=go.Figure()
+    st.session_state['interpolated_signal']=np.zeros(1000)
+    st.session_state['figure']=go.Figure()
+time = np.linspace(0, 5, 1000)
 ################################## global variables  ######################################################
 #cash using(mini memory for the front end)
 @st.cache(persist=True)
@@ -126,7 +128,8 @@ def clear_data():
     st.session_state['list_of_signals']=[]
     st.session_state['sum_of_signals']=np.zeros(1000)
     st.session_state['sum_of_signals_clean']=np.zeros(1000)
-    st.session_state['fig_sine']=go.Figure()
+    st.session_state['interpolated_signal']=np.zeros(1000)
+    st.session_state['figure']=go.Figure()
 ################################################################################################################################################
 #function used to delete signals from the plot
 def delete(index_to_delete):
@@ -135,11 +138,6 @@ def delete(index_to_delete):
     delete_amplitude=st.session_state.list_of_signals[index_to_delete][1]#get frequency of  signal to be deleted
     delete_phase=st.session_state.list_of_signals[index_to_delete][2]#get phase of  signal to be deleted
     st.session_state.list_of_signals.pop(index_to_delete)#remove the ddesired signal parameter from session state
-    #turn the tuple data of the figure into list and back to be able to remove the figure of the signal from plot
-    list_fig_sine_data=list(st.session_state.fig_sine.data)
-    list_fig_sine_data.remove(st.session_state.fig_sine.data[index_to_delete])
-    st.session_state.fig_sine.data=tuple(list_fig_sine_data)
-    #remove the signal from the summation of sine signals
     removed_signal = delete_amplitude * sin(2 * pi * delete_frequency* time + delete_phase*pi/180)
     st.session_state.sum_of_signals-=removed_signal
     #if there's no remaing signals clear the data
@@ -149,24 +147,31 @@ def delete(index_to_delete):
 #adding the noise function
 def noise_sine():
     #if the value of the SNR is zero then there is no noise in the signal 
-    if st.session_state.noise_slider_key==0:
-        st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
-        sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
-        sine_signal_dataFrame.columns=['time','values']
-        sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
-        interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
-        resample_signal_plot = px.line(interpolated_signal)
+    if hasattr(st.session_state, "noise_slider_key"):
+        if st.session_state.noise_slider_key==0 :
+            st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
+            sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
+            sine_signal_dataFrame.columns=['time','values']
+            sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
+
+
+
+            st.session_state.interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
         
-    else:
-        #add noise to summation of signals
-        noise_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals_clean)]).T
-        noise_signal_dataFrame.columns=['time','values']
-        st.session_state.sum_of_signals,time_noise_domain=createNoise(st.session_state.noise_slider_key, noise_signal_dataFrame ) 
-        sine_noise_dataFrame=pd.DataFrame(data = [np.array(time_noise_domain),np.array(st.session_state.sum_of_signals)]).T
-        sine_noise_dataFrame.columns=['time','values']
-        sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_noise_dataFrame, sampling_frequecny_applied)
-        interpolated_signal= sinc_interp(sine_noise_dataFrame, sampled_signal_time_domain)
-        #resample_signal_plot = px.line(interpolated_signal)
+            
+        else:
+            #add noise to summation of signals
+            noise_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals_clean)]).T
+            noise_signal_dataFrame.columns=['time','values']
+            st.session_state.sum_of_signals,time_noise_domain=createNoise(st.session_state.noise_slider_key, noise_signal_dataFrame ) 
+            sine_noise_dataFrame=pd.DataFrame(data = [np.array(time_noise_domain),np.array(st.session_state.sum_of_signals)]).T
+            sine_noise_dataFrame.columns=['time','values']
+            sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_noise_dataFrame, sampling_frequecny_applied)
+
+
+
+            st.session_state.interpolated_signal= sinc_interp(sine_noise_dataFrame, sampled_signal_time_domain)
+        
         
 ######################################################################################################################################################
 #converting the the signals indvidually and the sum of the signals into a csv file function
@@ -189,64 +194,54 @@ def calculate_max_frequency():
         return 0
 ################################## Ploting functions ######################################################
 ################################################################################################################################################
-# function used to update used for ploting different sine waves
-def update_plot(fig):
-    #updating plot layout by changing color ,adding titles to plot ....
+def add_plot(fig=st.session_state.figure,x=time):
+    signal_sum = st.checkbox('Signals Sum',value=True)
+    signal_resampled = st.checkbox('Resampled Signal')
+    
+    st.session_state.figure=go.Figure()
+    y_axis=[st.session_state.sum_of_signals,st.session_state.interpolated_signal]
+    fig.add_trace(
+        go.Scatter(x=x, y=st.session_state.sum_of_signals, name='sum signals',visible=signal_sum)
+        ) 
+    fig.add_trace(
+        go.Scatter(x=x, y=st.session_state.interpolated_signal, name='Resampled Signal',visible=signal_resampled)
+        ) 
+    signals=st.session_state.list_of_signals
+    for i in range(len(st.session_state.list_of_signals)):
+        signal_no = st.checkbox(f'Signal {i}')
+        y_axis.append(signals[i])
+        y=signals[i][1] * sin(2 * pi * signals[i][0] * time + signals[i][2] *pi/180)
+        fig.add_trace(
+            go.Scatter(x=x, y=y, name=f'Signal {i+1}',visible=signal_no)
+            ) 
+
+
+def update_plot(fig=st.session_state.figure):
+    # updating plot layout by changing color ,adding titles to plot ....
     fig.update_layout(
     xaxis_title="Time", 
     yaxis_title="Amplitude",
-    autosize=False,
-    width=500,
-    height=500,
-    title_text="Generated Sin Waves",
-    margin=dict(
-        l=50,
-        r=50,
-        b=100,
-        t=100,
-        pad=4
-    ),
     paper_bgcolor="white",
     font_color="black",
 )
     #ploting wave using plotly
+    
     st.plotly_chart(fig,use_container_width=True)
-################################################################################################################################################
-#function used to add each sine wave generated to the same plot
-def add_to_plot(fig,x,y,name):
-        fig.add_trace(
-        go.Scatter(x=x, y=y, name=name)
-    ) 
-################################################################################################################################################      
-#function used to plot the addation  of sin signal generated
-def update_sum_plot(x,y): 
-    df=pd.DataFrame(dict(Time=x,Amplitude=y))
-    fig=(px.line(df,x='Time', y='Amplitude'))
-    #update layout 
-    fig.update_layout(
-    autosize=False,
-    width=500,
-    height=500,
-    title_text="Addition of Sin Waves",
-    margin=dict(
-        l=50,
-        r=50,
-        b=100,
-        t=100,
-        pad=4
-    ),
-    paper_bgcolor="white",
-    font_color="black",
-)
-    st.plotly_chart(fig,use_container_width=True)
+
+
+def edit_sine():
+        if st.session_state.list_of_signals:
+            delete(-1)
+        generate_sine()
+        
 def generate_sine():
         sine_volt = st.session_state.Amplitude * sin(2 * pi * st.session_state.Frequency * time + st.session_state.Phase*pi/180)
-        add_to_plot(st.session_state.fig_sine,x=time,y=sine_volt,name=f"{frequency}hz") 
         #add the signal to the cache storage
         signal_parameters=[st.session_state.Frequency,st.session_state.Amplitude,st.session_state.Phase]
         st.session_state.list_of_signals.append(signal_parameters)
         st.session_state.sum_of_signals+=sine_volt
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
+        noise_sine()
 def delete_sine():
     if st.session_state.list_of_signals:
         option = st.sidebar.selectbox(
@@ -255,7 +250,7 @@ def delete_sine():
         selected_value=st.session_state.list_of_signals.index(option)
         with col2:
             #if the button is pressed go the delete function
-            delete_button=st.sidebar.button('Delete',key=1,on_click=delete,args= (selected_value,))
+            st.sidebar.button('Delete',key=1,on_click=delete,args= (selected_value,))
         
         #after every change from the upload, delete or genrate we update both plots
 def add_sampling_sine():
@@ -263,12 +258,12 @@ def add_sampling_sine():
     sine_signal_dataFrame.columns=['time','values']
     sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
     interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
-    resample_signal_plot = px.line(interpolated_signal)  
-    with graph3:   
-        st.plotly_chart(resample_signal_plot,  use_container_width=True, height = 100, width = 100)
+    # resample_signal_plot = px.line(interpolated_signal)  
+    # with graph3:   
+    #     st.plotly_chart(resample_signal_plot,  use_container_width=True, height = 100, width = 100)
 
 ################################## Main implementation ######################################################
-time = np.linspace(0, 5, 1000)
+
 
 if selected_signal == "EMG Sample Signal":
     emg = load_data(selected_signal)
@@ -300,22 +295,24 @@ if selected_signal == "EMG Sample Signal":
             st.plotly_chart(fig_resample,use_container_width=True)
 
 elif selected_signal == "Generate sine":
+    
     with st.sidebar:
-        signal_options = st.checkbox('Generating options')
+        signal_options = st.checkbox('Generating options',value=True)
         signal_noise = st.checkbox('Noise')
         signal_save = st.checkbox('Save')
         signal_delete = st.checkbox('Delete')
         if signal_options:
         #slider to get frequency for sin wave generation
-            frequency = st.slider('Frequency', 0.0, 20.0, step=0.5, key='Frequency',on_change=generate_sine)
+            frequency = st.slider('Frequency', 0.0, 20.0,1.0, step=0.5, key='Frequency',on_change=edit_sine)
             #slider to get amplitude for sin wave generation
-            amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=generate_sine)
+            amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
             #slider to get phase for sin wave generation
-            phase = st.slider('Phase', 0, 360, 0, key='Phase',on_change=generate_sine)
-        with col1:
-            update_plot(st.session_state.fig_sine)
-        with col2:
-            update_sum_plot(x=time,y=st.session_state.sum_of_signals)
+            phase = st.slider('Phase', 0, 360, value=0, key='Phase',on_change=edit_sine)
+            if not st.session_state.list_of_signals:
+                generate_sine()
+            st.button('Add',on_click=generate_sine)
+    add_plot() 
+    with st.sidebar:     
         if signal_noise: 
             noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine) 
         sampling_frequecny_applied = set_slider(80)
@@ -330,7 +327,7 @@ elif selected_signal == "Generate sine":
                     file_name='Sample.csv',
                     mime='text/csv',
                 )
-            
+    update_plot()
     
         #add a button to add uploaded file
 elif selected_signal == "upload signal":
@@ -342,11 +339,16 @@ elif selected_signal == "upload signal":
         if signal_options:
             with st.sidebar:
                 #slider to get frequency for sin wave generation
-                frequency = st.slider('Frequency', 0.0, 20.0, step=0.5, key='Frequency',on_change=generate_sine)
+                frequency = st.slider('Frequency', 0.0, 20.0,1.0 ,step=0.5, key='Frequency',on_change=edit_sine)
                 #slider to get amplitude for sin wave generation
-                amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=generate_sine)
+                amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
                 #slider to get phase for sin wave generation
-                phase = st.slider('Phase', 0, 360, 0, key='Phase',on_change=generate_sine)
+                phase = st.slider('Phase', 0, 360,value=180, key='Phase',on_change=edit_sine)
+            if not st.session_state.list_of_signals:
+                generate_sine()
+            st.button('Add',on_click=generate_sine)
+        add_plot()
+                
         #UPLOADING A GENRATED FILE
         with col3:
             uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
@@ -365,17 +367,14 @@ elif selected_signal == "upload signal":
                 for i in range(len(frequencies_of_downloaded_signal)):
                     #calculate the sine and draw it 
                     sine_volt = amplitudes_of_downloaded_signal[i] * sin(2 * pi * frequencies_of_downloaded_signal[i] * t + phases_of_downloaded_signal[i]*pi/180)
-                    add_to_plot(st.session_state.fig_sine,x=t,y=sine_volt,name=f"{frequencies_of_downloaded_signal[i]}hz")
+                    
                     #add the parameters to the stored data 
                     signal_parameters=[frequencies_of_downloaded_signal[i],amplitudes_of_downloaded_signal[i],phases_of_downloaded_signal[i]]
                     st.session_state.list_of_signals.append(signal_parameters)
             #add the values(y-axis) to the stored sum
                 st.session_state.sum_of_signals+=data.value
                 st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
-        with col1:
-            update_plot(st.session_state.fig_sine)
-        with col2:
-            update_sum_plot(x=time,y=st.session_state.sum_of_signals)
+    
     #if the slider of the noise changes then go noise func
         if signal_noise: 
             noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
@@ -391,5 +390,4 @@ elif selected_signal == "upload signal":
                     file_name='Sample.csv',
                     mime='text/csv',
                 )
-            
-        
+        update_plot()

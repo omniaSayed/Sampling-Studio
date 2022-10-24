@@ -51,7 +51,7 @@ div.bk bl bm bn b1 {
     background-color: rgba(143, 185, 223, 0.342);
 }
 section.main.css-k1vhr4.egzxvld3{
-    background-color:rgba(236, 237, 238, 0.897);
+    background-color:rgba(214, 215, 216, 0.74);
 }
 .plot-container.plotly {
     border-radius: 30%;
@@ -90,7 +90,7 @@ button.css-6kekos.edgvbvh9#Add file{
     background-color: rgba(255, 255, 255, 0.603);
     border-radius: 5%;
     line-height: 1.6;
-    width: 30%;
+    width: 20%;
 }
 button.css-1prua9e.edgvbvh9{
     color: rgb(255, 255, 255);
@@ -98,7 +98,7 @@ button.css-1prua9e.edgvbvh9{
     background-color: rgba(115, 185, 252, 0.719);
     border-radius: 5%;
     border-color: rgba(2, 2, 46, 0.925);
-    line-height: 1.9;
+    line-height: 1.6;
     width: 25%;   
 }
 header.css-18ni7ap.e8zbici2{
@@ -106,10 +106,15 @@ header.css-18ni7ap.e8zbici2{
     display: none;
 }
 section.css-po3vlj.exg6vvm15{
-size: 2px;
+height:90px ;
+width: 770px;
+transform: translateY(-55px);
+
 }
 .css-1djdyxw.ek41t0m0{
-    color: rgb(255, 255, 255);
+    background-color: rgba(2, 2, 46, 0.596);
+    border-radius: 5%;
+    color: rgba(255, 255, 255, 0.918);
     font-size: 24px;
     font-family: sans-serif;
 }

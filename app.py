@@ -344,10 +344,10 @@ elif selected_signal == "upload signal":
                 amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
                 #slider to get phase for sin wave generation
                 phase = st.slider('Phase', 0, 360,value=180, key='Phase',on_change=edit_sine)
-            if not st.session_state.list_of_signals:
-                generate_sine()
-            st.sidebar.button('Add',on_click=generate_sine)
-        add_plot()
+                if not st.session_state.list_of_signals:
+                    generate_sine()
+                st.sidebar.button('Add',on_click=generate_sine)
+        
                 
         #UPLOADING A GENRATED FILE
         with col3:
@@ -374,7 +374,7 @@ elif selected_signal == "upload signal":
             #add the values(y-axis) to the stored sum
                 st.session_state.sum_of_signals+=data.value
                 st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
-    
+        add_plot()
     #if the slider of the noise changes then go noise func
         if signal_noise: 
             noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  

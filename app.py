@@ -55,7 +55,7 @@ selected_signal=option_menu(
             },
 )
 graph1, graph2 = st.columns((1, 1))
-col3,col4=st.columns((27,24))
+col3,col4=st.columns((2,1))
 col1, col2 = st.columns(2)
 graph3,graph4=st.columns((26,27))
 ################################## Adding variables to session ######################################################
@@ -346,7 +346,7 @@ elif selected_signal == "upload signal":
                 phase = st.slider('Phase', 0, 360,value=180, key='Phase',on_change=edit_sine)
             if not st.session_state.list_of_signals:
                 generate_sine()
-            st.button('Add',on_click=generate_sine)
+            st.sidebar.button('Add',on_click=generate_sine)
         add_plot()
                 
         #UPLOADING A GENRATED FILE
@@ -384,7 +384,7 @@ elif selected_signal == "upload signal":
             delete_sine() 
             st.sidebar.button("Clear",on_click=clear_data)
         if signal_save:
-            st.download_button(
+            st.sidebar.download_button(
                     label="Save ",
                     data=convert_data_to_csv(),
                     file_name='Sample.csv',

@@ -22,7 +22,7 @@ with open("design.css")as f:
 #Add title
 # st.title("Sampling Studio For Biological Signals")
 # st.markdown(" Welcome To Our Sampling Studio ")
-st.sidebar.title("Sampling Settings")
+#st.sidebar.title("Sampling Settings")
 #Add elements to side bar
     #select box used to determine type pf provided signals
 #selected_signal = st.sidebar.selectbox('Provided Signals', ['EMG Sample Signal', 'Generate sine '])
@@ -33,31 +33,33 @@ def set_slider(max_freq):
                 Nyquist_rate=1
             else:
                 Nyquist_rate=calculate_max_frequency()*2
-           
-            user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Maximum Frequency ', 1,max_freq,value=int(Nyquist_rate),key=12 )
+            with graph2:
+                user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_freq,value=int(Nyquist_rate),key=12 )
             return user_selected_sampling_frequency
-selected_signal=option_menu(
-    menu_title=None,
-    options=["Generate sine","upload signal"],
-    default_index=0,
-    orientation="horizontal",
-     styles={
-                "container": {"padding": "0!important", "background-color": "rgba(2, 2, 46, 0.925)",},
-                "icon": {"color": "white", "font-size": "20px"},
-                "nav-link": {
-                    "font-size": "20px",
-                    "text-align": "center",
-                    "margin": "0px",
-                    "--hover-color": "rgba(177, 199, 219, 0.555)",
-                    "color": "white",
-                },
-                "nav-link-selected": {"background-color": "rgba(114, 171, 218, 0.651)"},
-            },
-)
+# selected_signal=option_menu(
+#     menu_title=None,
+#     options=["Generate Sin","Upload Signal"],
+#     default_index=0,
+#     orientation="horizontal",
+#      styles={
+#                 "container": {"padding": "0!important", "background-color": "rgba(2, 2, 46, 0.925)",},
+#                 "icon": {"color": "white", "font-size": "20px"},
+#                 "nav-link": {
+#                     "font-size": "20px",
+#                     "text-align": "center",
+#                     "margin": "0px",
+#                     "--hover-color": "rgba(177, 199, 219, 0.555)",
+#                     "color": "white",
+#                 },
+#                 "nav-link-selected": {"background-color": "rgba(114, 171, 218, 0.651)"},
+#             },
+#)
 col3,col4=st.columns((2,1))
 col1, col2 = st.columns(2)
 graph3,graph4=st.columns((26,27))
 graph1, graph2 = st.columns((7, 27))
+col_select, col_delete = st.columns([3,1])
+
 ################################## Adding variables to session ######################################################
 if 'list_of_signals' not in st.session_state:
     st.session_state['list_of_signals']=[]
@@ -209,12 +211,12 @@ def add_plot(fig=st.session_state.figure,x=time):
         go.Scatter(x=x, y=st.session_state.sum_of_signals, name='sum signals',visible=signal_sum)
         ) 
     fig.add_trace(
-        go.Scatter(x=st.session_state.resampled_time, y=st.session_state.interpolated_signal, name='Resampled Signal',visible=signal_resampled)
+        go.Scatter(x=st.session_state.resampled_time, y=st.session_state.interpolated_signal, name='Resampled Signal',mode='markers+lines',visible=signal_resampled)
         ) 
     signals=st.session_state.list_of_signals
     for i in range(len(st.session_state.list_of_signals)):
         with graph1:
-          signal_no = st.checkbox(f'Signal {i}')
+          signal_no = st.checkbox(f'Signal {i+1}')
         y_axis.append(signals[i])
         y=signals[i][1] * sin(2 * pi * signals[i][0] * time + signals[i][2])
         fig.add_trace(
@@ -300,103 +302,96 @@ def add_sampling_sine():
     #     with graph2:
     #         st.plotly_chart(fig_resample,use_container_width=True)
 
-if selected_signal == "Generate sine":
+# if selected_signal == "Generate Sin":
     
-    with st.sidebar:
-        signal_options = st.checkbox('Generating options',value=True)
-        signal_noise = st.checkbox('Noise')
-        signal_save = st.checkbox('Save')
-        signal_delete = st.checkbox('Delete')
-        if signal_options:
-        #slider to get frequency for sin wave generation
-            frequency = st.slider('Frequency', 0.0, 20.0,1.0, step=0.5, key='Frequency',on_change=edit_sine)
-            #slider to get amplitude for sin wave generation
-            amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
-            #slider to get phase for sin wave generation
-            phase = st.slider('Phase', 0.0, 2*pi, value=0.25*pi, key='Phase',on_change=edit_sine)
-            if not st.session_state.list_of_signals:
-                generate_sine()
-            st.button('Add',on_click=generate_sine)
+#     with st.sidebar:
+#         signal_options = st.checkbox('Generating options',value=True)
+#         signal_noise = st.checkbox('Noise')
+#         signal_save = st.checkbox('Save')
+#         signal_delete = st.checkbox('Delete')
+#         if signal_options:
+#         #slider to get frequency for sin wave generation
+#             frequency = st.slider('Frequency', 0.0, 20.0,1.0, step=0.5, key='Frequency',on_change=edit_sine)
+#             #slider to get amplitude for sin wave generation
+#             amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
+#             #slider to get phase for sin wave generation
+#             phase = st.slider('Phase', 0.0, 2*pi, value=0.25*pi, key='Phase',on_change=edit_sine)
+#             if not st.session_state.list_of_signals:
+#                 generate_sine()
+#             st.button('Add',on_click=generate_sine)
      
-    with st.sidebar:     
-        if signal_noise: 
-            noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine) 
-        sampling_frequecny_applied = set_slider(80)
-        add_sampling_sine()
-        if signal_delete:     
-            delete_sine() 
-            st.button("Clear",on_click=clear_data)
-        if signal_save:
-            st.download_button(
-                    label="Save ",
-                    data=convert_data_to_csv(),
-                    file_name='Sample.csv',
-                    mime='text/csv',
-                )
+    # with st.sidebar:     
+    #     if signal_noise: 
+    #         noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine) 
+    #     sampling_frequecny_applied = set_slider(80)
+    #     add_sampling_sine()
+    #     if signal_delete:     
+    #         delete_sine() 
+    #         st.button("Clear",on_click=clear_data)
+    #     if signal_save:
+    #         st.download_button(
+    #                 label="Save ",
+    #                 data=convert_data_to_csv(),
+    #                 file_name='Sample.csv',
+    #                 mime='text/csv',
+    #             )
 
-    add_plot()
-    update_plot()
+    # add_plot()
+    # update_plot()
     
-        #add a button to add uploaded file
-elif selected_signal == "upload signal":
-        with st.sidebar:
-            signal_options = st.checkbox('Generating options')
-            signal_noise = st.checkbox('Noise')
-            signal_save = st.checkbox('Save')
-            signal_delete = st.checkbox('Delete')
-        if signal_options:
-            with st.sidebar:
-                #slider to get frequency for sin wave generation
-                frequency = st.slider('Frequency', 0.0, 20.0,1.0 ,step=0.5, key='Frequency',on_change=edit_sine)
-                #slider to get amplitude for sin wave generation
-                amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
-                #slider to get phase for sin wave generation
-                phase = st.slider('Phase', 0.0, 2*pi,value=0.25*pi, key='Phase',on_change=edit_sine)
-                if not st.session_state.list_of_signals:
-                    generate_sine()
-                st.sidebar.button('Add',on_click=generate_sine)
+
+
+with st.sidebar:
+    #slider to get frequency for sin wave generation
+    frequency = st.slider('Frequency', 0.0, 20.0,1.0 ,step=0.5, key='Frequency',on_change=edit_sine)
+    #slider to get amplitude for sin wave generation
+    amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
+    #slider to get phase for sin wave generation
+    phase = st.slider('Phase', 0.0, 2*pi,value=0.25*pi, key='Phase',on_change=edit_sine)
+    if not st.session_state.list_of_signals:
+        generate_sine()
+    st.sidebar.button('Add',on_click=generate_sine)
+
         
-                
-        #UPLOADING A GENRATED FILE
-        with col3:
-            uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
-        with col4:
-            add_upload=st.button('Add file')
-            #if there's a file uploaded and the button is pressed
-        if uploaded_file and add_upload :
-                #download the data to the browser
-                data=load_data( 'Provide A Local File Signal',uploaded_file)
-                #get the signal parameters and remove the empty entries
-                amplitudes_of_downloaded_signal=np.array(data.amplitude.dropna())
-                frequencies_of_downloaded_signal=np.array(data.frequency.dropna())
-                phases_of_downloaded_signal=np.array(data.phase.dropna())
-                t=np.array(data.time)
-                #loop through the present values of the frequencies
-                for i in range(len(frequencies_of_downloaded_signal)):
-                    #calculate the sine and draw it 
-                    sine_volt = amplitudes_of_downloaded_signal[i] * sin(2 * pi * frequencies_of_downloaded_signal[i] * t + phases_of_downloaded_signal[i])
-                    
-                    #add the parameters to the stored data 
-                    signal_parameters=[frequencies_of_downloaded_signal[i],amplitudes_of_downloaded_signal[i],phases_of_downloaded_signal[i]]
-                    st.session_state.list_of_signals.append(signal_parameters)
-            #add the values(y-axis) to the stored sum
-                st.session_state.sum_of_signals+=data.value
-                st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
-        
-    #if the slider of the noise changes then go noise func
-        if signal_noise: 
-            noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
-        sampling_frequecny_applied = set_slider(80)
-        add_sampling_sine()
-        if signal_delete:     
-            delete_sine() 
-            st.sidebar.button("Clear",on_click=clear_data)
-        if signal_save:
-            st.sidebar.download_button(
-                    label="Save ",
-                    data=convert_data_to_csv(),
-                    file_name='Sample.csv',
-                    mime='text/csv',
-                )
-        add_plot()
-        update_plot()
+#UPLOADING A GENRATED FILE
+with col3:
+    uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
+with col4:
+    add_upload=st.button('Add file')
+    #if there's a file uploaded and the button is pressed
+if uploaded_file and add_upload :
+        #download the data to the browser
+        data=load_data( 'Provide A Local File Signal',uploaded_file)
+        #get the signal parameters and remove the empty entries
+        amplitudes_of_downloaded_signal=np.array(data.amplitude.dropna())
+        frequencies_of_downloaded_signal=np.array(data.frequency.dropna())
+        phases_of_downloaded_signal=np.array(data.phase.dropna())
+        t=np.array(data.time)
+        #loop through the present values of the frequencies
+        for i in range(len(frequencies_of_downloaded_signal)):
+            #calculate the sine and draw it 
+            sine_volt = amplitudes_of_downloaded_signal[i] * sin(2 * pi * frequencies_of_downloaded_signal[i] * t + phases_of_downloaded_signal[i])
+            
+            #add the parameters to the stored data 
+            signal_parameters=[frequencies_of_downloaded_signal[i],amplitudes_of_downloaded_signal[i],phases_of_downloaded_signal[i]]
+            st.session_state.list_of_signals.append(signal_parameters)
+    #add the values(y-axis) to the stored sum
+        st.session_state.sum_of_signals+=data.value
+        st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
+
+#if the slider of the noise changes then go noise func
+with graph2:
+    noise_sin=st.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
+sampling_frequecny_applied = set_slider(80)
+add_sampling_sine()
+delete_sine() 
+st.sidebar.button("Clear",on_click=clear_data)
+
+st.sidebar.download_button(
+        label="Save ",
+        data=convert_data_to_csv(),
+        file_name='Sample.csv',
+        mime='text/csv',
+    )
+add_plot()
+update_plot()

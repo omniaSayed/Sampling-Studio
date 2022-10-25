@@ -23,10 +23,12 @@ div [data-baseweb="select"]>div{
     text-align: center;
 }
 label.css-81oif8.effi0qh3 {
-    color: rgb(255, 255, 255);
+    color: rgba(103, 172, 206, 0.603);
+    font-weight: bold;
     font-family: sans-serif;
-    font-size: 16px;
+    font-size: 22px;
     text-align: left;
+    
 }
 div.bk bl bm bn b1 {
     color: rgb(118, 121, 138);
@@ -51,7 +53,7 @@ div.bk bl bm bn b1 {
     background-color: rgba(143, 185, 223, 0.342);
 }
 section.main.css-k1vhr4.egzxvld3{
-    background-color:rgba(214, 215, 216, 0.74);
+    background-color:rgba(158, 169, 201, 0.574);
 }
 .plot-container.plotly {
     border-radius: 30%;
@@ -112,9 +114,9 @@ transform: translateY(-43px);
 
 }
 .css-1djdyxw.ek41t0m0{
-    background-color: rgba(2, 2, 46, 0.596);
+    
     border-radius: 5%;
-    color: rgba(255, 255, 255, 0.918);
+    color: rgba(30, 7, 97, 0.918);
     font-size: 24px;
     font-family: sans-serif;
 }

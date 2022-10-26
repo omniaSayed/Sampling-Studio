@@ -57,8 +57,8 @@ def set_slider(max_freq):
 col3,col4=st.columns((2,1))
 col1, col2 = st.columns(2)
 graph3,graph4=st.columns((26,27))
-graph1, graph2 = st.columns((7, 27))
-col_select, col_delete = st.columns([3,1])
+graph1, graph2 = st.columns((8, 27))
+#col_select, col_delete = st.columns([3,1])
 
 ################################## Adding variables to session ######################################################
 if 'list_of_signals' not in st.session_state:
@@ -252,13 +252,15 @@ def generate_sine():
         noise_sine()
 def delete_sine():
     if st.session_state.list_of_signals:
-        option = st.sidebar.selectbox(
-        'Select Values to Delete',
-        st.session_state.list_of_signals,format_func=lambda x: "Frequency:" + str(x[0])+", Amplitude:" + str(x[1])+", Phase:" + str(x[2]))
-        selected_value=st.session_state.list_of_signals.index(option)
-        with col2:
-            #if the button is pressed go the delete function
-            st.sidebar.button('Delete',key=1,on_click=delete,args= (selected_value,))
+        with st.sidebar:
+           # col_sel,col_del=st.columns([27,25])
+            option = st.selectbox(
+            'Select Values to Delete',
+            st.session_state.list_of_signals,format_func=lambda x: "Frequency:" + str(x[0])+", Amplitude:" + str(x[1])+", Phase:" + str(x[2]))
+            selected_value=st.session_state.list_of_signals.index(option)
+
+                #if the button is pressed go the delete function
+            st.button('Delete',key=1,on_click=delete,args= (selected_value,))
         
         #after every change from the upload, delete or genrate we update both plots
 def add_sampling_sine():
@@ -350,7 +352,7 @@ with st.sidebar:
     phase = st.slider('Phase', 0.0, 2*pi,value=0.25*pi, key='Phase',on_change=edit_sine)
     if not st.session_state.list_of_signals:
         generate_sine()
-    st.sidebar.button('Add',on_click=generate_sine)
+    st.button('Add',on_click=generate_sine)
 
         
 #UPLOADING A GENRATED FILE
@@ -381,13 +383,15 @@ if uploaded_file and add_upload :
 
 #if the slider of the noise changes then go noise func
 with graph2:
-    noise_sin=st.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
-sampling_frequecny_applied = set_slider(80)
+    noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
+    sampling_frequecny_applied = set_slider(80)
 add_sampling_sine()
 delete_sine() 
-st.sidebar.button("Clear",on_click=clear_data)
+with st.sidebar:
+    but_cle,but,but_save=st.columns([27,1,26])
+    but_cle.button("Clear",on_click=clear_data)
 
-st.sidebar.download_button(
+    but_save.download_button(
         label="Save ",
         data=convert_data_to_csv(),
         file_name='Sample.csv',

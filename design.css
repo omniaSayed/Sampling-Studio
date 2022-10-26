@@ -82,7 +82,7 @@ button.css-6kekos.edgvbvh9{
     background-color: rgba(1, 125, 182, 0.603);
     border-radius: 5%;
     line-height: 1.3;
-    width: 35%;
+    width: 30%;
 } 
 
 button.css-1prua9e.edgvbvh9{
@@ -99,8 +99,9 @@ header.css-18ni7ap.e8zbici2{
     display: none;
 }
 section.css-po3vlj.exg6vvm15{
-     width: 600px;
-    transform: translatey(-45px);
+    transform: translateY(-41px);
+    min-width: auto;
+    max-width: initial;
 }
 .css-1djdyxw.ek41t0m0{
    

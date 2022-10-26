@@ -56,7 +56,7 @@ def set_slider(max_freq):
 #)
 col3,col4=st.columns((2,1))
 col1, col2 = st.columns(2)
-graph3,graph4=st.columns((26,27))
+graph3,graph4=st.columns([3,2])
 graph1, graph2 = st.columns((8, 27))
 #col_select, col_delete = st.columns([3,1])
 

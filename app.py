@@ -34,7 +34,7 @@ def set_slider(max_freq):
             else:
                 Nyquist_rate=calculate_max_frequency()*2
             with graph2:
-                user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_freq,value=int(Nyquist_rate),key=12 )
+                user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_freq,value=int(Nyquist_rate),key='sampling_frequency')
             return user_selected_sampling_frequency
 # selected_signal=option_menu(
 #     menu_title=None,
@@ -56,7 +56,7 @@ def set_slider(max_freq):
 #)
 col3,col4=st.columns((2,1))
 col1, col2 = st.columns(2)
-graph3,graph4=st.columns([3,2])
+graph3,graph4=st.columns((3,1),gap='small')
 graph1, graph2 = st.columns((8, 27))
 #col_select, col_delete = st.columns([3,1])
 
@@ -158,7 +158,7 @@ def noise_sine():
             st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
             sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
             sine_signal_dataFrame.columns=['time','values']
-            sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
+            sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, st.session_state.sampling_frequency)
 
 
 
@@ -172,9 +172,7 @@ def noise_sine():
             st.session_state.sum_of_signals,time_noise_domain=createNoise(st.session_state.noise_slider_key, noise_signal_dataFrame ) 
             sine_noise_dataFrame=pd.DataFrame(data = [np.array(time_noise_domain),np.array(st.session_state.sum_of_signals)]).T
             sine_noise_dataFrame.columns=['time','values']
-            sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_noise_dataFrame, sampling_frequecny_applied)
-
-
+            sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_noise_dataFrame, st.session_state.sampling_frequency)
 
             st.session_state.interpolated_signal= sinc_interp(sine_noise_dataFrame, sampled_signal_time_domain)
         

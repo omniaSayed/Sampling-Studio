@@ -347,7 +347,7 @@ with st.sidebar:
     #slider to get amplitude for sin wave generation
     amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
     #slider to get phase for sin wave generation
-    phase = st.slider('Phase', 0.0, 2*pi,value=0.25*pi, key='Phase',on_change=edit_sine)
+    phase = st.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sine)
     if not st.session_state.list_of_signals:
         generate_sine()
     st.button('Add',on_click=generate_sine)

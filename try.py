@@ -1,7 +1,6 @@
 ################################## Essential imports ######################################################
 from matplotlib.ft2font import HORIZONTAL
 from matplotlib.pyplot import margins
-from soupsieve import select
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -20,6 +19,15 @@ st.set_page_config(
 #Adding css file to webpage
 with open("design.css")as f:
     st.markdown(f"<style>{f.read() }</style>",unsafe_allow_html=True)
+#Add title
+# st.title("Sampling Studio For Biological Signals")
+# st.markdown(" Welcome To Our Sampling Studio ")
+#st.sidebar.title("Sampling Settings")
+#Add elements to side bar
+    #select box used to determine type pf provided signals
+#selected_signal = st.sidebar.selectbox('Provided Signals', ['EMG Sample Signal', 'Generate sine '])
+
+    #slider to provide maximum frequency of signal for sampling process
 def set_slider(max_range):
             if calculate_max_frequency()==0:
                 Nyquist_rate=1
@@ -28,10 +36,28 @@ def set_slider(max_range):
             with graph2:
                 user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_range,value=int(Nyquist_rate),key='sampling_frequency')
             return user_selected_sampling_frequency
-col_upload,col_add_u=st.columns((2,1))
-#col1, col2 = st.columns(2)
-#graph3,graph4=st.columns((3,1),gap='small')
-select_b, graph2 = st.columns((8, 27))
+# selected_signal=option_menu(
+#     menu_title=None,
+#     options=["Generate Sin","Upload Signal"],
+#     default_index=0,
+#     orientation="horizontal",
+#      styles={
+#                 "container": {"padding": "0!important", "background-color": "rgba(2, 2, 46, 0.925)",},
+#                 "icon": {"color": "white", "font-size": "20px"},
+#                 "nav-link": {
+#                     "font-size": "20px",
+#                     "text-align": "center",
+#                     "margin": "0px",
+#                     "--hover-color": "rgba(177, 199, 219, 0.555)",
+#                     "color": "white",
+#                 },
+#                 "nav-link-selected": {"background-color": "rgba(114, 171, 218, 0.651)"},
+#             },
+#)
+col3,col4=st.columns((2,1))
+col1, col2 = st.columns(2)
+graph3,graph4=st.columns((3,1),gap='small')
+graph1, graph2 = st.columns((8, 27))
 #col_select, col_delete = st.columns([3,1])
 
 ################################## Adding variables to session ######################################################
@@ -165,9 +191,9 @@ def calculate_max_frequency():
 ################################## Ploting functions ######################################################
 ################################################################################################################################################
 def add_plot(fig=st.session_state.figure,x=time):
-    with select_b:
-        signal_sum = st.checkbox('Signals Sum',value=True)
-        signal_resampled = st.checkbox('Resampled Signal',value=True)
+    with graph1:
+      signal_sum = st.checkbox('Signals Sum',value=True)
+      signal_resampled = st.checkbox('Resampled Signal',value=True)
     
     st.session_state.figure=go.Figure()
     #y_axis=[st.session_state.sum_of_signals,st.session_state.interpolated_signal]
@@ -179,7 +205,7 @@ def add_plot(fig=st.session_state.figure,x=time):
         ) 
     signals=st.session_state.list_of_signals
     for i in range(len(st.session_state.list_of_signals)):
-        with select_b:
+        with graph1:
             signal_no = st.checkbox(f'Signal {i+1}')
         #y_axis.append(signals[i])
         y=signals[i][1] * sin(2 * pi * signals[i][0] * time + signals[i][2])
@@ -216,7 +242,7 @@ def generate_sine():
 def delete_sine():
     if st.session_state.list_of_signals:
         with st.sidebar:
-            # col_sel,col_del=st.columns([27,25])
+           # col_sel,col_del=st.columns([27,25])
             option = st.selectbox(
             'Select Values to Delete',
             st.session_state.list_of_signals,format_func=lambda x: "Frequency:" + str(x[0])+", Amplitude:" + str(x[1])+", Phase:" + str(x[2]))
@@ -231,8 +257,81 @@ def add_sampling_sine():
     sine_signal_dataFrame.columns=['time','values']
     sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
     interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
+    # resample_signal_plot = px.line(interpolated_signal)  
+    # with graph3:   
+    #     st.plotly_chart(resample_signal_plot,  use_container_width=True, height = 100, width = 100)
 
 ################################## Main implementation ######################################################
+
+
+# if selected_signal == "EMG Sample Signal":
+#     emg = load_data(selected_signal)
+#     emg = emg[0:1001]
+#     sampling_frequecny_applied = set_slider(400)
+#     #slider to get signal to noise ratio
+#     SNR= st.sidebar.slider('SNR', 0, 20,0,key='SNR')
+#     if SNR==0 :
+#         origianal_signal_plot = px.line(emg, x = emg['time'], y = emg['values'])
+#         sampled_signal_points, sampled_signal_time_domain = signal_sampling(emg, sampling_frequecny_applied)
+#         interpolated_signal= sinc_interp(emg, sampled_signal_time_domain)
+#         resample_signal_plot = px.line(interpolated_signal)
+#         with graph1:
+#             st.plotly_chart(origianal_signal_plot, use_container_width=True, height = 100, width = 100)
+#         with graph2:
+#             st.plotly_chart(resample_signal_plot,  use_container_width=True, height = 100, width = 100)
+    # else:
+    #     emg_m=np.array(emg)
+    #     noised_signal,emg_time=createNoise(SNR,emg)
+    #     noised_signal_dataFrame=pd.DataFrame(data = [np.array(emg_time),np.array(noised_signal)]).T
+    #     noised_signal_dataFrame.columns=['time','values']
+    #     sampled_signal_points, sampled_signal_time_domain = signal_sampling(noised_signal_dataFrame, sampling_frequecny_applied)
+    #     interpolated_signal = sinc_interp(noised_signal_dataFrame, sampled_signal_time_domain)
+    #     fig_resample = px.line(interpolated_signal)
+    #     noise_fig=px.line(x=emg_time,y=noised_signal)
+    #     with graph1:
+    #         st.plotly_chart(noise_fig,use_container_width=True)
+    #     with graph2:
+    #         st.plotly_chart(fig_resample,use_container_width=True)
+
+# if selected_signal == "Generate Sin":
+    
+#     with st.sidebar:
+#         signal_options = st.checkbox('Generating options',value=True)
+#         signal_noise = st.checkbox('Noise')
+#         signal_save = st.checkbox('Save')
+#         signal_delete = st.checkbox('Delete')
+#         if signal_options:
+#         #slider to get frequency for sin wave generation
+#             frequency = st.slider('Frequency', 0.0, 20.0,1.0, step=0.5, key='Frequency',on_change=edit_sine)
+#             #slider to get amplitude for sin wave generation
+#             amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
+#             #slider to get phase for sin wave generation
+#             phase = st.slider('Phase', 0.0, 2*pi, value=0.25*pi, key='Phase',on_change=edit_sine)
+#             if not st.session_state.list_of_signals:
+#                 generate_sine()
+#             st.button('Add',on_click=generate_sine)
+     
+    # with st.sidebar:     
+    #     if signal_noise: 
+    #         noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine) 
+    #     sampling_frequecny_applied = set_slider(80)
+    #     add_sampling_sine()
+    #     if signal_delete:     
+    #         delete_sine() 
+    #         st.button("Clear",on_click=clear_data)
+    #     if signal_save:
+    #         st.download_button(
+    #                 label="Save ",
+    #                 data=convert_data_to_csv(),
+    #                 file_name='Sample.csv',
+    #                 mime='text/csv',
+    #             )
+
+    # add_plot()
+    # update_plot()
+    
+
+
 with st.sidebar:
     #slider to get frequency for sin wave generation
     frequency = st.slider('Frequency', 0, 20,1 , key='Frequency',on_change=edit_sine)
@@ -246,9 +345,9 @@ with st.sidebar:
 
         
 #UPLOADING A GENRATED FILE
-with col_upload:
+with col3:
     uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
-with col_add_u:
+with col4:
     add_upload=st.button('Add file')
     #if there's a file uploaded and the button is pressed
 if uploaded_file and add_upload :

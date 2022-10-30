@@ -21,12 +21,9 @@ st.set_page_config(
 
 with open("design.css")as f:
     st.markdown(f"<style>{f.read() }</style>",unsafe_allow_html=True)
-col_upload,col_add=st.columns((2,1))
-select_box, graph = st.columns((8, 27))
-with graph:
-        sampling_method = st.radio(
-        "Choose Sampling Method",
-        ('Sampling Frequency', 'Multiples of Max Frequency'),horizontal=True)
+
+#with graph:
+
 ################################## Adding variables to session ######################################################
 if 'list_of_signals_parameters' not in st.session_state:
     st.session_state['list_of_signals_parameters']=[]
@@ -35,7 +32,7 @@ if 'list_of_signals_parameters' not in st.session_state:
     st.session_state['interpolated_signal']=np.zeros(1000)
     st.session_state['resampled_time']=np.zeros(1000)
     st.session_state['figure']=go.Figure()
-time = np.linspace(0, 10, 1000)
+time = np.linspace(0, 5, 1000)
 ################################## global variables  ######################################################
 #cash using(mini memory for the front end)
 # @st.cache(persist=True)
@@ -46,12 +43,12 @@ def set_slider(max_range):
                 Nyquist_rate=1
             else:
                 Nyquist_rate=calculate_max_frequency()*2
-            with graph:
-                if sampling_method == 'Sampling Frequency':
+            #with graph:
+            if sampling_method == 'Sampling Frequency':
                     user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Frequency ', 1.0,float(max_range),step=0.1,value=float(Nyquist_rate),key='sampling_frequency')
-                else:
+            else:
                     user_selected_sampling_frequency=st.sidebar.slider("Sampling with Multiples of Max Frequency", int(calculate_max_frequency()), 10*int(calculate_max_frequency()), step = int(calculate_max_frequency()),key='sampling_frequency2' )
-                return user_selected_sampling_frequency
+            return user_selected_sampling_frequency
 ################################################################################################################################################
 #Read and load data to be plotted function
 def load_data(select, uploaded_file=None):
@@ -75,7 +72,6 @@ def signal_sampling_with_max_frequency_multiples(input_signal = st.session_state
     max_sampling_frequency_multiple = calculate_max_frequency()
     sampled_signal_time_domain = np.arange(min_time, max_time, 0.25/max_sampling_frequency_multiple)
     sampled_signal_points =np.sin( 2*np.pi* max_sampling_frequency_multiple* sampled_signal_time_domain)
-    st.session_state.resampled_time=sampled_signal_time_domain
     return sampled_signal_points, sampled_signal_time_domain
 ################################################################################################################################################
 # interpolating function with sinc
@@ -89,6 +85,7 @@ def sinc_interp(input_signal, sampling_time):
     sincM = np.tile(sampling_time, (len(original_signal_time_domain), 1)) - np.tile(original_signal_time_domain[:, np.newaxis], (1, len(sampling_time)))
     resampled_signal = np.dot(original_signal_amplitude, np.sinc(sincM/Time_period))
     st.session_state.interpolated_signal= resampled_signal
+    st.session_state.resampled_time=sampling_time
     return resampled_signal
 ################################################################################################################################################
 # Noise function
@@ -231,37 +228,45 @@ def delete_sine():
                 #if the button is pressed go the delete function
             st.button('Delete',key=1,on_click=delete,args= (selected_value,))
         
-        #after every change from the upload, delete or genrate we update both plots
-def add_sampling_sine():
-    sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
-    sine_signal_dataFrame.columns=['time','values']
-    sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, sampling_frequecny_applied)
-    interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
+#         #after every change from the upload, delete or genrate we update both plots
+# def add_sampling_sine():
+#     sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
+#     sine_signal_dataFrame.columns=['time','values']
+#     sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, sampling_frequecny_applied)
+#     interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
 
 ################################## Main implementation ######################################################
 with st.sidebar:
+    Frequency_column,space,ammplitude_column=st.columns([2,1,2])
+    phase_column,space,noise_column=st.columns([2,1,2])
     #slider to get frequency for sin wave generation
-    frequency = st.slider('Frequency', 0, 20,1 , key='Frequency',on_change=edit_sine)
+    frequency = Frequency_column.slider('Frequency', 0, 20,1 , key='Frequency',on_change=edit_sine)
     #slider to get amplitude for sin wave generation
-    amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
+    amplitude = ammplitude_column.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
     #slider to get phase for sin wave generation
-    phase = st.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sine)
+    phase = phase_column.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sine)
     #slider to get noise of sin wave generation
-    noise_sin=st.sidebar.slider('SNR',1,80,70,key="noise_slider_key",on_change=noise_sine)  
+    noise_slider=noise_column.slider('SNR',1,80,70,key="noise_slider_key",on_change=noise_sine)  
 
 
     if not st.session_state.list_of_signals_parameters:
         generate_sine()
     st.button('Add',on_click=generate_sine)
+    sampling_method = st.sidebar.radio(
+            "Choose Sampling Method",
+            ('Sampling Frequency', 'Multiples of Max Frequency'),horizontal=True)
     sampling_frequecny_applied = set_slider(80)
     noise_sine()
-
+column_upload,column_add=st.columns(2)
 
 #UPLOADING A GENRATED FILE
-with col_upload:
-    uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
-with col_add:
-    add_upload=st.button('Add file')
+with column_upload:
+    uploaded_file = column_upload.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
+with column_add:
+    st.write("")
+    st.write("")
+    st.write("")
+    add_upload=column_add.button('Add file')
     #if there's a file uploaded and the button is pressed
 if uploaded_file and add_upload :
         #download the data to the browser
@@ -274,7 +279,7 @@ if uploaded_file and add_upload :
         #loop through the present values of the frequencies
         for i in range(len(frequencies_of_downloaded_signal)):
             #calculate the sine and draw it 
-            sine_volt = amplitudes_of_downloaded_signal[i] * sin(2 * pi * frequencies_of_downloaded_signal[i] * t + phases_of_downloaded_signal[i])
+            signal_amplitude = amplitudes_of_downloaded_signal[i] * sin(2 * pi * frequencies_of_downloaded_signal[i] * t + phases_of_downloaded_signal[i])
             
             #add the parameters to the stored data 
             signal_parameters=[frequencies_of_downloaded_signal[i],amplitudes_of_downloaded_signal[i],phases_of_downloaded_signal[i]]
@@ -283,17 +288,21 @@ if uploaded_file and add_upload :
         st.session_state.sum_of_signals+=data.value
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
 
-add_sampling_sine()
 delete_sine() 
+sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
+sine_signal_dataFrame.columns=['time','values']
+sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, sampling_frequecny_applied)
+interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
 with st.sidebar:
-    but_cle,but,but_save=st.columns([27,1,26])
-    but_cle.button("Clear",on_click=clear_data)
+    button_clear,space,button_save=st.columns([27,1,26])
+    button_clear.button("Clear",on_click=clear_data)
 
-    but_save.download_button(
+    button_save.download_button(
         label="Save ",
         data=convert_data_to_csv(),
         file_name='Sample.csv',
         mime='text/csv',
     )
+select_box, graph = st.columns((8, 27))
 add_plot()
 update_plot()

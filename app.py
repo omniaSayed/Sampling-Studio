@@ -39,7 +39,7 @@ def set_slider(max_range):
                 if genre == 'Sampling Frequency':
                     user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_range,value=int(Nyquist_rate),key='sampling_frequency')
                 else:
-                    user_selected_sampling_frequency=st.slider("sampling with max frequency multiples", calculate_max_frequency(), 10*calculate_max_frequency(), step = calculate_max_frequency(),key='sampling_frequency2' )
+                    user_selected_sampling_frequency=st.slider("sampling with max frequency multiples", int(calculate_max_frequency()), 10*int(calculate_max_frequency()), step = int(calculate_max_frequency()),key='sampling_frequency2' )
                 return user_selected_sampling_frequency
         
 
@@ -239,7 +239,7 @@ def generate_sine():
         st.session_state.list_of_signals.append(signal_parameters)
         st.session_state.sum_of_signals+=sine_volt
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
-        noise_sine()
+        
 def delete_sine():
     if st.session_state.list_of_signals:
         with st.sidebar:
@@ -261,20 +261,26 @@ def add_sampling_sine():
 
 ################################## Main implementation ######################################################
 with st.sidebar:
+    flag=False
     #slider to get frequency for sin wave generation
     frequency = st.slider('Frequency', 0, 20,1 , key='Frequency',on_change=edit_sine)
     #slider to get amplitude for sin wave generation
     amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
     #slider to get phase for sin wave generation
     phase = st.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sine)
+    noise_sin=st.sidebar.slider('SNR',1,80,key="noise_slider_key",on_change=noise_sine,help='0 is equivalent to not having any noise')  
+
+        
     if not st.session_state.list_of_signals:
         generate_sine()
+        flag=True
     st.button('Add',on_click=generate_sine)
     # st.session_state.sampling_frequency=st.slider("sampling with max frequency multiples", calculate_max_frequency(), 10*calculate_max_frequency(), step = calculate_max_frequency() )
     sampling_frequecny_applied = set_slider(80)
-    noise_sin=st.sidebar.slider('SNR',0,80,0,key="noise_slider_key",on_change=noise_sine,help='0 is equivalent to not having any noise')  
-
-        
+    if flag:
+        noise_sine()
+        flag=False
+   
 #UPLOADING A GENRATED FILE
 with col_upload:
     uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])

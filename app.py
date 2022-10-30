@@ -26,8 +26,16 @@ def set_slider(max_range):
             else:
                 Nyquist_rate=calculate_max_frequency()*2
             with graph2:
-                user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_range,value=int(Nyquist_rate),key='sampling_frequency')
-            return user_selected_sampling_frequency
+                genre = st.radio(
+                "Choose Sampling Method",
+                ('Sampling Frequency', 'Multiples of Maximum Frequency'),horizontal=True)
+
+                if genre == 'Sampling Frequency':
+                    user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_range,value=int(Nyquist_rate),key='sampling_frequency')
+                else:
+                    user_selected_sampling_frequency=st.slider("sampling with max frequency multiples", calculate_max_frequency(), 10*calculate_max_frequency(), step = calculate_max_frequency(),key='sampling_frequency' )
+                return user_selected_sampling_frequency
+        
 col_upload,col_add_u=st.columns((2,1))
 #col1, col2 = st.columns(2)
 #graph3,graph4=st.columns((3,1),gap='small')
@@ -59,11 +67,20 @@ def load_data(select, uploaded_file=None):
     return returned_signal
 ################################################################################################################################################
 # Noise function 
-def signal_sampling(input_signal, sampling_frequency):
+def signal_sampling_with_input_frequency(input_signal, sampling_frequency):
     min_time = np.min(input_signal['time'])
     max_time = np.max(input_signal['time'])
     sampled_signal_time_domain = np.arange(min_time, max_time, 0.25/sampling_frequency)
     sampled_signal_points =np.sin( 2*np.pi* sampling_frequency* sampled_signal_time_domain)
+    st.session_state.resampled_time=sampled_signal_time_domain
+    return sampled_signal_points, sampled_signal_time_domain
+
+def signal_sampling_with_max_frequency_multiples(input_signal = st.session_state.sum_of_signals):
+    min_time = np.min(time)
+    max_time = np.max(time)
+    max_sampling_frequency_multiple = calculate_max_frequency()
+    sampled_signal_time_domain = np.arange(min_time, max_time, 0.25/max_sampling_frequency_multiple)
+    sampled_signal_points =np.sin( 2*np.pi* max_sampling_frequency_multiple* sampled_signal_time_domain)
     st.session_state.resampled_time=sampled_signal_time_domain
     return sampled_signal_points, sampled_signal_time_domain
 ################################################################################################################################################
@@ -130,7 +147,7 @@ def noise_sine():
             st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
             sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
             sine_signal_dataFrame.columns=['time','values']
-            sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, st.session_state.sampling_frequency)
+            sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, st.session_state.sampling_frequency)
             st.session_state.interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)       
         else:
             #add noise to summation of signals
@@ -139,7 +156,7 @@ def noise_sine():
             st.session_state.sum_of_signals,time_noise_domain=createNoise(st.session_state.noise_slider_key, noise_signal_dataFrame ) 
             sine_noise_dataFrame=pd.DataFrame(data = [np.array(time_noise_domain),np.array(st.session_state.sum_of_signals)]).T
             sine_noise_dataFrame.columns=['time','values']
-            sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_noise_dataFrame, st.session_state.sampling_frequency)
+            sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_noise_dataFrame, st.session_state.sampling_frequency)
             st.session_state.interpolated_signal= sinc_interp(sine_noise_dataFrame, sampled_signal_time_domain)
         
         
@@ -229,7 +246,7 @@ def delete_sine():
 def add_sampling_sine():
     sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
     sine_signal_dataFrame.columns=['time','values']
-    sampled_signal_points, sampled_signal_time_domain = signal_sampling(sine_signal_dataFrame, sampling_frequecny_applied)
+    sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, sampling_frequecny_applied)
     interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
 
 ################################## Main implementation ######################################################
@@ -239,10 +256,14 @@ with st.sidebar:
     #slider to get amplitude for sin wave generation
     amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
     #slider to get phase for sin wave generation
-    phase = st.slider('Phase', 0.0, 2*pi,value=0.25*pi, key='Phase',on_change=edit_sine)
+    phase = st.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sine)
+    sampling_frequecny_applied = set_slider(80)
+    noise_sin=st.sidebar.slider('SNR',0,80,2,key="noise_slider_key",on_change=noise_sine)  
     if not st.session_state.list_of_signals:
         generate_sine()
     st.button('Add',on_click=generate_sine)
+    # st.session_state.sampling_frequency=st.slider("sampling with max frequency multiples", calculate_max_frequency(), 10*calculate_max_frequency(), step = calculate_max_frequency() )
+
 
         
 #UPLOADING A GENRATED FILE
@@ -273,8 +294,7 @@ if uploaded_file and add_upload :
 
 #if the slider of the noise changes then go noise func
 #with graph2:
-noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
-sampling_frequecny_applied = set_slider(80)
+
 add_sampling_sine()
 delete_sine() 
 with st.sidebar:

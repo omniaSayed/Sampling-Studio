@@ -42,7 +42,7 @@ div.bk bl bm bn b1 {
     text-align: left;
 }
 .StyledThumbValue.css-10y5sf6.e88czh82{
-    color: rgba(241, 241, 241, 0.925);
+    color: rgba(98, 201, 219, 0.925);
     font-family: sans-serif;
     font-size: 16px;
     text-align: left;
@@ -90,16 +90,18 @@ button.css-1prua9e.edgvbvh9{
     font-size: 24px;
     background-color: rgba(115, 185, 252, 0.719);
     border-radius: 5%;
+    box-sizing: 100%;
     border-color: rgba(2, 2, 46, 0.925);
     line-height: 1.6;
-    width: 30%;   
+    height: 2em;
+    width: 5em;  
 }
 header.css-18ni7ap.e8zbici2{
     color:rgb(49, 51, 63);
     display: none;
 }
 section.css-po3vlj.exg6vvm15{
-    transform: translateY(-41px);
+    transform: translateY(-46px);
     min-width: auto;
     max-width: initial;
 }

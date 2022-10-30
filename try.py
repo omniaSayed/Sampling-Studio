@@ -33,7 +33,7 @@ def set_slider(max_range):
                 Nyquist_rate=1
             else:
                 Nyquist_rate=calculate_max_frequency()*2
-            with graph2:
+            with graph:
                 user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_range,value=int(Nyquist_rate),key='sampling_frequency')
             return user_selected_sampling_frequency
 # selected_signal=option_menu(
@@ -57,7 +57,7 @@ def set_slider(max_range):
 col3,col4=st.columns((2,1))
 col1, col2 = st.columns(2)
 graph3,graph4=st.columns((3,1),gap='small')
-graph1, graph2 = st.columns((8, 27))
+graph1, graph = st.columns((8, 27))
 #col_select, col_delete = st.columns([3,1])
 
 ################################## Adding variables to session ######################################################
@@ -222,7 +222,7 @@ def update_plot(fig=st.session_state.figure):
     font_color="black",
 )
     #ploting wave using plotly
-    with graph2:
+    with graph:
         st.plotly_chart(fig,use_container_width=True)
 
 
@@ -277,7 +277,7 @@ def add_sampling_sine():
 #         resample_signal_plot = px.line(interpolated_signal)
 #         with graph1:
 #             st.plotly_chart(origianal_signal_plot, use_container_width=True, height = 100, width = 100)
-#         with graph2:
+#         with graph:
 #             st.plotly_chart(resample_signal_plot,  use_container_width=True, height = 100, width = 100)
     # else:
     #     emg_m=np.array(emg)
@@ -290,7 +290,7 @@ def add_sampling_sine():
     #     noise_fig=px.line(x=emg_time,y=noised_signal)
     #     with graph1:
     #         st.plotly_chart(noise_fig,use_container_width=True)
-    #     with graph2:
+    #     with graph:
     #         st.plotly_chart(fig_resample,use_container_width=True)
 
 # if selected_signal == "Generate Sin":
@@ -371,7 +371,7 @@ if uploaded_file and add_upload :
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
 
 #if the slider of the noise changes then go noise func
-#with graph2:
+#with graph:
 noise_sin=st.sidebar.slider('SNR',key="noise_slider_key",on_change=noise_sine)  
 sampling_frequecny_applied = set_slider(80)
 add_sampling_sine()

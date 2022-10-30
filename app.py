@@ -18,29 +18,31 @@ st.set_page_config(
 )
 ################################## Page construction ######################################################
 #Adding css file to webpage
+
 with open("design.css")as f:
     st.markdown(f"<style>{f.read() }</style>",unsafe_allow_html=True)
+col_upload,col_add_u=st.columns((2,1))
+#col1, col2 = st.columns(2)
+#graph3,graph4=st.columns((3,1),gap='small')
+select_b, graph2 = st.columns((8, 27))
+#col_select, col_delete = st.columns([3,1])
+with graph2:
+        genre = st.radio(
+        "Choose Sampling Method",
+        ('Sampling Frequency', 'Multiples of Maximum Frequency'),horizontal=True)
 def set_slider(max_range):
             if calculate_max_frequency()==0:
                 Nyquist_rate=1
             else:
                 Nyquist_rate=calculate_max_frequency()*2
             with graph2:
-                genre = st.radio(
-                "Choose Sampling Method",
-                ('Sampling Frequency', 'Multiples of Maximum Frequency'),horizontal=True)
-
                 if genre == 'Sampling Frequency':
                     user_selected_sampling_frequency = st.slider('Change Sampling Frequency ', 1,max_range,value=int(Nyquist_rate),key='sampling_frequency')
                 else:
-                    user_selected_sampling_frequency=st.slider("sampling with max frequency multiples", calculate_max_frequency(), 10*calculate_max_frequency(), step = calculate_max_frequency(),key='sampling_frequency' )
+                    user_selected_sampling_frequency=st.slider("sampling with max frequency multiples", calculate_max_frequency(), 10*calculate_max_frequency(), step = calculate_max_frequency(),key='sampling_frequency2' )
                 return user_selected_sampling_frequency
         
-col_upload,col_add_u=st.columns((2,1))
-#col1, col2 = st.columns(2)
-#graph3,graph4=st.columns((3,1),gap='small')
-select_b, graph2 = st.columns((8, 27))
-#col_select, col_delete = st.columns([3,1])
+
 
 ################################## Adding variables to session ######################################################
 if 'list_of_signals' not in st.session_state:
@@ -147,7 +149,11 @@ def noise_sine():
             st.session_state.sum_of_signals=st.session_state.sum_of_signals_clean
             sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
             sine_signal_dataFrame.columns=['time','values']
-            sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, st.session_state.sampling_frequency)
+            if genre == "Sampling Frequency":
+                sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, st.session_state.sampling_frequency)
+         
+            else : 
+                sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_noise_dataFrame, st.session_state.sampling_frequency2)
             st.session_state.interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)       
         else:
             #add noise to summation of signals
@@ -156,7 +162,11 @@ def noise_sine():
             st.session_state.sum_of_signals,time_noise_domain=createNoise(st.session_state.noise_slider_key, noise_signal_dataFrame ) 
             sine_noise_dataFrame=pd.DataFrame(data = [np.array(time_noise_domain),np.array(st.session_state.sum_of_signals)]).T
             sine_noise_dataFrame.columns=['time','values']
-            sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_noise_dataFrame, st.session_state.sampling_frequency)
+            if genre == "Sampling Frequency":
+                sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_noise_dataFrame, st.session_state.sampling_frequency)
+            else : 
+                sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_noise_dataFrame, st.session_state.sampling_frequency2)
+
             st.session_state.interpolated_signal= sinc_interp(sine_noise_dataFrame, sampled_signal_time_domain)
         
         
@@ -257,13 +267,12 @@ with st.sidebar:
     amplitude = st.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
     #slider to get phase for sin wave generation
     phase = st.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sine)
-    sampling_frequecny_applied = set_slider(80)
-    noise_sin=st.sidebar.slider('SNR',0,80,2,key="noise_slider_key",on_change=noise_sine)  
     if not st.session_state.list_of_signals:
         generate_sine()
     st.button('Add',on_click=generate_sine)
     # st.session_state.sampling_frequency=st.slider("sampling with max frequency multiples", calculate_max_frequency(), 10*calculate_max_frequency(), step = calculate_max_frequency() )
-
+    sampling_frequecny_applied = set_slider(80)
+    noise_sin=st.sidebar.slider('SNR',0,80,0,key="noise_slider_key",on_change=noise_sine,help='0 is equivalent to not having any noise')  
 
         
 #UPLOADING A GENRATED FILE

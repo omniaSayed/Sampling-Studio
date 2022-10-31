@@ -33,7 +33,7 @@ if 'list_of_signals_parameters' not in st.session_state:
     st.session_state['interpolated_signal']=np.zeros(1000)
     st.session_state['resampled_time']=np.zeros(1000)
     st.session_state['figure']=go.Figure()
-time = np.linspace(0, 1, 1000)
+time = np.linspace(0, 5, 1000)
 ################################## global variables  ######################################################
 #cash using(mini memory for the front end)
 # @st.cache(persist=True)
@@ -46,7 +46,7 @@ def set_slider(max_range):
                 Nyquist_rate=calculate_max_frequency()*2
             #with graph:
             if sampling_method == 'Sampling Frequency':
-                    user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Frequency ', 1.0,float(max_range),step=0.1,value=float(Nyquist_rate),key='sampling_frequency')
+                    user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Frequency ', 1,int(max_range),step=1,value=int(Nyquist_rate),key='sampling_frequency')
             else:
                     user_selected_sampling_frequency=st.sidebar.slider("Sampling with Multiples of Max Frequency", int(calculate_max_frequency()), 5*int(calculate_max_frequency()), step = int(calculate_max_frequency()),key='sampling_frequency2' )
             return user_selected_sampling_frequency
@@ -166,7 +166,7 @@ def calculate_max_frequency():
     if frequencies:
         return max(frequencies)
     else:
-        return 0
+        return 1
 ################################## Ploting functions ######################################################
 ################################################################################################################################################
 def add_plot(fig=st.session_state.figure,time=time):
@@ -244,11 +244,11 @@ with st.sidebar:
     Frequency_column,ammplitude_column=st.columns(2)
     phase_column,noise_column=st.columns(2)
     #slider to get frequency for sin wave generation
-    frequency = Frequency_column.slider('Frequency', 0, 20,1 , key='Frequency',on_change=edit_sin)
+    frequency = Frequency_column.slider('Frequency', 1, 20,1 , key='Frequency',on_change=edit_sin)
     #slider to get amplitude for sin wave generation
-    amplitude = ammplitude_column.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sin)
+    amplitude = ammplitude_column.slider('Amplitude', 1, 20,1, key='Amplitude',on_change=edit_sin)
     #slider to get phase for sin wave generation
-    phase = phase_column.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sin)
+    phase = phase_column.slider('Phase', 0.0, 2*pi,value=0.0, key='Phase',on_change=edit_sin)
     #slider to get noise of sin wave generation
     noise_slider=noise_column.slider('SNR',1,80,70,key="noise_slider_key",on_change=noise_sin)  
 

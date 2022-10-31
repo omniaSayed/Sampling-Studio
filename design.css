@@ -36,7 +36,7 @@ div.bk bl bm bn b1 {
 }
 .css-1inwz65.e88czh80 {
     border-radius: 30%;
-    background-color: white;
+    color: aliceblue;
     font-family: sans-serif;
     font-size: 16px;
     text-align: left;
@@ -80,11 +80,8 @@ button.css-6kekos.edgvbvh9{
     color: rgb(255, 255, 255);
     font-size: 24px;
     background-color: rgba(1, 125, 182, 0.603);
-    box-sizing: 100%;
     border-radius: 5%;
-    line-height: 1.6;
-    height: 2em;
-    width: 8em;  
+    
    
 } 
 
@@ -98,24 +95,21 @@ button.css-1prua9e.edgvbvh9{
     line-height: 1.6;
     height: 2em;
     width: 5em;  
+
+   
 }
 header.css-18ni7ap.e8zbici2{
     color:rgb(49, 51, 63);
     display: none;
 }
-[data-testid="stFileUploader"]{
-padding-right: 10px;
-}
+
 div.row-widget.stRadio > div[role="radiogroup"] > label[data-baseweb="radio"] > div 
 { 
     color: rgb(112, 180, 219); 
     font-size: 18px;
     font-family: sans-serif;
 }
-/* section.css-po3vlj.exg6vvm15{
-    min-width: auto;
-    max-width: initial;
-} */
+
 .css-1djdyxw.ek41t0m0{
    
     border-radius: 5%;
@@ -127,6 +121,5 @@ div.row-widget.stRadio > div[role="radiogroup"] > label[data-baseweb="radio"] > 
 [data-testid="stFileUploadDropzone"]{
 
 
-    background-color: transparent;
+    background-color: rgba(188, 201, 219, 0.61);;
 }
-

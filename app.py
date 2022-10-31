@@ -27,6 +27,7 @@ with open("design.css")as f:
 ################################## Adding variables to session ######################################################
 if 'list_of_signals_parameters' not in st.session_state:
     st.session_state['list_of_signals_parameters']=[]
+    st.session_state['drawn_signal']=[[1,1,0]]
     st.session_state['sum_of_signals']=np.zeros(1000)
     st.session_state['sum_of_signals_clean']=np.zeros(1000)
     st.session_state['interpolated_signal']=np.zeros(1000)
@@ -111,6 +112,7 @@ def createNoise(SNR,signal_input ):
 def clear_data():
     #assign all values to zero
     st.session_state['list_of_signals_parameters']=[]
+    st.session_state['drawn_signal']=[[1,1,0]]
     st.session_state['sum_of_signals']=np.zeros(1000)
     st.session_state['sum_of_signals_clean']=np.zeros(1000)
     st.session_state['interpolated_signal']=np.zeros(1000)
@@ -171,6 +173,7 @@ def add_plot(fig=st.session_state.figure,time=time):
     with select_box:
         signal_sum = st.checkbox('Signals Sum',value=True)
         signal_resampled = st.checkbox('Reconstructed Signal',value=True)
+        signal_drawn = st.checkbox('Drawn Signal',value=True)
     
     st.session_state.figure=go.Figure()
     #y_axis=[st.session_state.sum_of_signals,st.session_state.interpolated_signal]
@@ -180,6 +183,10 @@ def add_plot(fig=st.session_state.figure,time=time):
     fig.add_trace(
         go.Scatter(x=st.session_state.resampled_time, y=st.session_state.interpolated_signal, name='Reconstructed Signal',line_shape='spline',mode='markers+lines',visible=signal_resampled)
         ) 
+    signal_amplitude=st.session_state.drawn_signal[0][1] * sin(2 * pi * st.session_state.drawn_signal[0][0] * time + st.session_state.drawn_signal[0][2])
+    fig.add_trace(
+        go.Scatter(x=time, y=signal_amplitude, name=f'drawn',visible=signal_drawn)
+        ) 
     signals=st.session_state.list_of_signals_parameters
     for i in range(len(st.session_state.list_of_signals_parameters)):
         with select_box:
@@ -188,7 +195,7 @@ def add_plot(fig=st.session_state.figure,time=time):
         fig.add_trace(
             go.Scatter(x=time, y=signal_amplitude, name=f'Signal {i+1}',visible=signal_no)
             ) 
-
+################################################################################################################################################
 def update_plot(fig=st.session_state.figure):
     # updating plot layout by changing color ,adding titles to plot ....
     fig.update_layout(
@@ -204,12 +211,13 @@ def update_plot(fig=st.session_state.figure):
     with graph:
         st.plotly_chart(fig,use_container_width=True)
 
-
+################################################################################################################################################
 def edit_sin():
-        if st.session_state.list_of_signals_parameters:
-            delete(-1)
-        generate_sin()
-        
+        if st.session_state.drawn_signal:
+            st.session_state.drawn_signal.pop()
+        signal_parameters=[st.session_state.Frequency,st.session_state.Amplitude,st.session_state.Phase]
+        st.session_state.drawn_signal.append(signal_parameters)
+################################################################################################################################################
 def generate_sin():
         sin_volt = st.session_state.Amplitude * sin(2 * pi * st.session_state.Frequency * time + st.session_state.Phase)
         #add the signal to the cache storage
@@ -217,7 +225,7 @@ def generate_sin():
         st.session_state.list_of_signals_parameters.append(signal_parameters)
         st.session_state.sum_of_signals+=sin_volt
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
-        
+################################################################################################################################################
 def delete_sin():
     if st.session_state.list_of_signals_parameters:
         with st.sidebar:
@@ -245,8 +253,8 @@ with st.sidebar:
     noise_slider=noise_column.slider('SNR',1,80,70,key="noise_slider_key",on_change=noise_sin)  
 
 
-    if not st.session_state.list_of_signals_parameters:
-        generate_sin()
+    # if not st.session_state.list_of_signals_parameters:
+    #     generate_sin()
     st.button('Add',on_click=generate_sin)
     sampling_method = st.sidebar.radio(
             "Choose Sampling Method",

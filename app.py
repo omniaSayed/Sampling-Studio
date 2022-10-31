@@ -32,7 +32,7 @@ if 'list_of_signals_parameters' not in st.session_state:
     st.session_state['interpolated_signal']=np.zeros(1000)
     st.session_state['resampled_time']=np.zeros(1000)
     st.session_state['figure']=go.Figure()
-time = np.linspace(0, 5, 1000)
+time = np.linspace(0, 1, 1000)
 ################################## global variables  ######################################################
 #cash using(mini memory for the front end)
 # @st.cache(persist=True)
@@ -47,7 +47,7 @@ def set_slider(max_range):
             if sampling_method == 'Sampling Frequency':
                     user_selected_sampling_frequency = st.sidebar.slider('Change Sampling Frequency ', 1.0,float(max_range),step=0.1,value=float(Nyquist_rate),key='sampling_frequency')
             else:
-                    user_selected_sampling_frequency=st.sidebar.slider("Sampling with Multiples of Max Frequency", int(calculate_max_frequency()), 10*int(calculate_max_frequency()), step = int(calculate_max_frequency()),key='sampling_frequency2' )
+                    user_selected_sampling_frequency=st.sidebar.slider("Sampling with Multiples of Max Frequency", int(calculate_max_frequency()), 5*int(calculate_max_frequency()), step = int(calculate_max_frequency()),key='sampling_frequency2' )
             return user_selected_sampling_frequency
 ################################################################################################################################################
 #Read and load data to be plotted function
@@ -61,7 +61,7 @@ def load_data(select, uploaded_file=None):
 def signal_sampling_with_input_frequency(input_signal, sampling_frequency):
     min_time = np.min(input_signal['time'])
     max_time = np.max(input_signal['time'])
-    sampled_signal_time_domain = np.arange(min_time, max_time, 0.25/sampling_frequency)
+    sampled_signal_time_domain = np.arange(min_time, max_time, 0.5/sampling_frequency)
     sampled_signal_points =np.sin( 2*np.pi* sampling_frequency* sampled_signal_time_domain)
     st.session_state.resampled_time=sampled_signal_time_domain
     return sampled_signal_points, sampled_signal_time_domain
@@ -70,7 +70,7 @@ def signal_sampling_with_max_frequency_multiples(input_signal = st.session_state
     min_time = np.min(time)
     max_time = np.max(time)
     max_sampling_frequency_multiple = calculate_max_frequency()
-    sampled_signal_time_domain = np.arange(min_time, max_time, 0.25/max_sampling_frequency_multiple)
+    sampled_signal_time_domain = np.arange(min_time, max_time, 1/max_sampling_frequency_multiple)
     sampled_signal_points =np.sin( 2*np.pi* max_sampling_frequency_multiple* sampled_signal_time_domain)
     return sampled_signal_points, sampled_signal_time_domain
 ################################################################################################################################################
@@ -131,19 +131,19 @@ def delete(index_to_delete):
         clear_data()
 #################################################################################################################################################   
 #adding the noise function
-def noise_sine():
+def noise_sin():
             #add noise to summation of signals
             noise_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals_clean)]).T
             noise_signal_dataFrame.columns=['time','values']
             st.session_state.sum_of_signals,time_noise_domain=createNoise(st.session_state.noise_slider_key, noise_signal_dataFrame ) 
-            sine_noise_dataFrame=pd.DataFrame(data = [np.array(time_noise_domain),np.array(st.session_state.sum_of_signals)]).T
-            sine_noise_dataFrame.columns=['time','values']
+            sin_noise_dataFrame=pd.DataFrame(data = [np.array(time_noise_domain),np.array(st.session_state.sum_of_signals)]).T
+            sin_noise_dataFrame.columns=['time','values']
             if sampling_method == "Sampling Frequency":
-                sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_noise_dataFrame, st.session_state.sampling_frequency)
+                sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sin_noise_dataFrame, st.session_state.sampling_frequency)
             else : 
-                sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_noise_dataFrame, st.session_state.sampling_frequency2)
+                sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sin_noise_dataFrame, st.session_state.sampling_frequency2)
 
-            st.session_state.interpolated_signal= sinc_interp(sine_noise_dataFrame, sampled_signal_time_domain)
+            st.session_state.interpolated_signal= sinc_interp(sin_noise_dataFrame, sampled_signal_time_domain)
         
         
 ######################################################################################################################################################
@@ -167,56 +167,58 @@ def calculate_max_frequency():
         return 0
 ################################## Ploting functions ######################################################
 ################################################################################################################################################
-def add_plot(fig=st.session_state.figure,x=time):
+def add_plot(fig=st.session_state.figure,time=time):
     with select_box:
         signal_sum = st.checkbox('Signals Sum',value=True)
-        signal_resampled = st.checkbox('Resampled Signal',value=True)
+        signal_resampled = st.checkbox('Reconstructed Signal',value=True)
     
     st.session_state.figure=go.Figure()
     #y_axis=[st.session_state.sum_of_signals,st.session_state.interpolated_signal]
     fig.add_trace(
-        go.Scatter(x=x, y=st.session_state.sum_of_signals, name='sum signals',visible=signal_sum)
+        go.Scatter(x=time, y=st.session_state.sum_of_signals, name='Sum Signals',visible=signal_sum)
         ) 
     fig.add_trace(
-        go.Scatter(x=st.session_state.resampled_time, y=st.session_state.interpolated_signal, name='Resampled Signal',mode='markers+lines',visible=signal_resampled)
+        go.Scatter(x=st.session_state.resampled_time, y=st.session_state.interpolated_signal, name='Reconstructed Signal',line_shape='spline',mode='markers+lines',visible=signal_resampled)
         ) 
     signals=st.session_state.list_of_signals_parameters
     for i in range(len(st.session_state.list_of_signals_parameters)):
         with select_box:
             signal_no = st.checkbox(f'Signal {i+1}')
-        #y_axis.append(signals[i])
-        y=signals[i][1] * sin(2 * pi * signals[i][0] * time + signals[i][2])
+        signal_amplitude=signals[i][1] * sin(2 * pi * signals[i][0] * time + signals[i][2])
         fig.add_trace(
-            go.Scatter(x=x, y=y, name=f'Signal {i+1}',visible=signal_no)
+            go.Scatter(x=time, y=signal_amplitude, name=f'Signal {i+1}',visible=signal_no)
             ) 
 
 def update_plot(fig=st.session_state.figure):
     # updating plot layout by changing color ,adding titles to plot ....
     fig.update_layout(
+    height=700,
     xaxis_title="Time (Sec)", 
-    yaxis_title="Amplitude (Volt)",
+    yaxis_title="Amplitude ",
     paper_bgcolor="white",
     font_color="black",
+    font_size= 20,
+    font_family= "sans-serif",
 )
     #ploting wave using plotly
     with graph:
         st.plotly_chart(fig,use_container_width=True)
 
 
-def edit_sine():
+def edit_sin():
         if st.session_state.list_of_signals_parameters:
             delete(-1)
-        generate_sine()
+        generate_sin()
         
-def generate_sine():
-        sine_volt = st.session_state.Amplitude * sin(2 * pi * st.session_state.Frequency * time + st.session_state.Phase)
+def generate_sin():
+        sin_volt = st.session_state.Amplitude * sin(2 * pi * st.session_state.Frequency * time + st.session_state.Phase)
         #add the signal to the cache storage
         signal_parameters=[st.session_state.Frequency,st.session_state.Amplitude,st.session_state.Phase]
         st.session_state.list_of_signals_parameters.append(signal_parameters)
-        st.session_state.sum_of_signals+=sine_volt
+        st.session_state.sum_of_signals+=sin_volt
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
         
-def delete_sine():
+def delete_sin():
     if st.session_state.list_of_signals_parameters:
         with st.sidebar:
             # col_sel,col_del=st.columns([27,25])
@@ -228,35 +230,29 @@ def delete_sine():
                 #if the button is pressed go the delete function
             st.button('Delete',key=1,on_click=delete,args= (selected_value,))
         
-#         #after every change from the upload, delete or genrate we update both plots
-# def add_sampling_sine():
-#     sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
-#     sine_signal_dataFrame.columns=['time','values']
-#     sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, sampling_frequecny_applied)
-#     interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
 
 ################################## Main implementation ######################################################
 with st.sidebar:
-    Frequency_column,space,ammplitude_column=st.columns([2,1,2])
-    phase_column,space,noise_column=st.columns([2,1,2])
+    Frequency_column,ammplitude_column=st.columns(2)
+    phase_column,noise_column=st.columns(2)
     #slider to get frequency for sin wave generation
-    frequency = Frequency_column.slider('Frequency', 0, 20,1 , key='Frequency',on_change=edit_sine)
+    frequency = Frequency_column.slider('Frequency', 0, 20,1 , key='Frequency',on_change=edit_sin)
     #slider to get amplitude for sin wave generation
-    amplitude = ammplitude_column.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sine)
+    amplitude = ammplitude_column.slider('Amplitude', 0, 20,1, key='Amplitude',on_change=edit_sin)
     #slider to get phase for sin wave generation
-    phase = phase_column.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sine)
+    phase = phase_column.slider('Phase', 0.0, 2*pi,value=0.79, key='Phase',on_change=edit_sin)
     #slider to get noise of sin wave generation
-    noise_slider=noise_column.slider('SNR',1,80,70,key="noise_slider_key",on_change=noise_sine)  
+    noise_slider=noise_column.slider('SNR',1,80,70,key="noise_slider_key",on_change=noise_sin)  
 
 
     if not st.session_state.list_of_signals_parameters:
-        generate_sine()
-    st.button('Add',on_click=generate_sine)
+        generate_sin()
+    st.button('Add',on_click=generate_sin)
     sampling_method = st.sidebar.radio(
             "Choose Sampling Method",
             ('Sampling Frequency', 'Multiples of Max Frequency'),horizontal=True)
     sampling_frequecny_applied = set_slider(80)
-    noise_sine()
+    noise_sin()
 column_upload,column_add=st.columns(2)
 
 #UPLOADING A GENRATED FILE
@@ -288,11 +284,11 @@ if uploaded_file and add_upload :
         st.session_state.sum_of_signals+=data.value
         st.session_state.sum_of_signals_clean=st.session_state.sum_of_signals
 
-delete_sine() 
-sine_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
-sine_signal_dataFrame.columns=['time','values']
-sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sine_signal_dataFrame, sampling_frequecny_applied)
-interpolated_signal= sinc_interp(sine_signal_dataFrame, sampled_signal_time_domain)
+delete_sin() 
+sin_signal_dataFrame=pd.DataFrame(data = [np.array(time),np.array(st.session_state.sum_of_signals)]).T
+sin_signal_dataFrame.columns=['time','values']
+sampled_signal_points, sampled_signal_time_domain = signal_sampling_with_input_frequency(sin_signal_dataFrame, sampling_frequecny_applied)
+interpolated_signal= sinc_interp(sin_signal_dataFrame, sampled_signal_time_domain)
 with st.sidebar:
     button_clear,space,button_save=st.columns([27,1,26])
     button_clear.button("Clear",on_click=clear_data)

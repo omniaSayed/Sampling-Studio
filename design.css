@@ -123,3 +123,10 @@ div.row-widget.stRadio > div[role="radiogroup"] > label[data-baseweb="radio"] > 
     font-size: 24px;
     font-family: sans-serif;
 }
+
+[data-testid="stFileUploadDropzone"]{
+
+
+    background-color: transparent;
+}
+

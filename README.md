@@ -15,8 +15,6 @@ Project functions
 
 
 Uploading Sampling Dashboard - Google Chrome 2022-11-01 17-16-21.mp4…
-
-
-
+![Video](https://drive.google.com/file/d/1APlP6zR63OHSWW-tC4ln-lqQXug2SeMY/view?usp=sharing)
 
 

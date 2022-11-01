@@ -33,7 +33,7 @@ if 'list_of_signals_parameters' not in st.session_state:
     st.session_state['interpolated_signal']=np.zeros(1000)
     st.session_state['resampled_time']=np.zeros(1000)
     st.session_state['figure']=go.Figure()
-time = np.linspace(0, 5, 1000)
+time = np.linspace(0, 1, 1000)
 ################################## global variables  ######################################################
 #cash using(mini memory for the front end)
 # @st.cache(persist=True)
@@ -71,7 +71,7 @@ def signal_sampling_with_max_frequency_multiples(input_signal = st.session_state
     min_time = np.min(time)
     max_time = np.max(time)
     max_sampling_frequency_multiple = calculate_max_frequency()
-    sampled_signal_time_domain = np.arange(min_time, max_time, 1/max_sampling_frequency_multiple)
+    sampled_signal_time_domain = np.arange(min_time, max_time, 0.5/max_sampling_frequency_multiple)
     sampled_signal_points =np.sin( 2*np.pi* max_sampling_frequency_multiple* sampled_signal_time_domain)
     return sampled_signal_points, sampled_signal_time_domain
 ################################################################################################################################################
@@ -244,7 +244,7 @@ with st.sidebar:
     Frequency_column,ammplitude_column=st.columns(2)
     phase_column,noise_column=st.columns(2)
     #slider to get frequency for sin wave generation
-    frequency = Frequency_column.slider('Frequency', 1, 20,1 , key='Frequency',on_change=edit_sin)
+    frequency = Frequency_column.slider('Frequency', 1, 100,1 , key='Frequency',on_change=edit_sin)
     #slider to get amplitude for sin wave generation
     amplitude = ammplitude_column.slider('Amplitude', 1, 20,1, key='Amplitude',on_change=edit_sin)
     #slider to get phase for sin wave generation
@@ -261,16 +261,16 @@ with st.sidebar:
             ('Sampling Frequency', 'Multiples of Max Frequency'),horizontal=True)
     sampling_frequecny_applied = set_slider(80)
     noise_sin()
-column_upload,column_add=st.columns(2)
-
+column_upload,column_add=st.columns((2,1))
 #UPLOADING A GENRATED FILE
 with column_upload:
-    uploaded_file = column_upload.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
-with column_add:
-    st.write("")
-    st.write("")
-    st.write("")
-    add_upload=column_add.button('Add file')
+    uploaded_file = st.file_uploader("", accept_multiple_files=False,type=['csv','txt'])
+if uploaded_file:
+    with column_add:
+        st.write("")
+        st.write("")
+        st.write("")
+        add_upload=st.button('Add file')
     #if there's a file uploaded and the button is pressed
 if uploaded_file and add_upload :
         #download the data to the browser

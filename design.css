@@ -90,11 +90,11 @@ button.css-1prua9e.edgvbvh9{
     font-size: 24px;
     background-color: rgba(115, 185, 252, 0.719);
     border-radius: 5%;
-    box-sizing: 100%;
+   
     border-color: rgba(2, 2, 46, 0.925);
-    line-height: 1.6;
-    height: 2em;
-    width: 5em;  
+    line-height: 1.6!important;
+    height: 2em!important;
+    width: 5em!important;  
 
    
 }
@@ -118,8 +118,8 @@ div.row-widget.stRadio > div[role="radiogroup"] > label[data-baseweb="radio"] > 
     font-family: sans-serif;
 }
 
-[data-testid="stFileUploadDropzone"]{
+div[data-testid="stFileUploadDropzone"]{
 
-
-    background-color: rgba(188, 201, 219, 0.61);;
+    width:70% !important;
+    background-color: rgba(188, 201, 219, 0.61);
 }

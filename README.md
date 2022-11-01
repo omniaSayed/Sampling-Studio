@@ -1,24 +1,22 @@
 # Sampling studio
 Team Members:
->
-* Omnia elsayed 
-* Sama Mostafa 
-* Mariam Ahmed
-* Mariam Hossam  
+> Name------------Section-------BN
+* Omnia Sayed-----   1   -------14
+* Sama Mostafa----   1   -------44
+* Mariam Ahmed--- 2   -----30
+* Mariam Hossam-- 2  -----31
 >
 Project functions
->Open biological Signal and plot them  
-* EMG signal
->Generate random signals 
->![Screen_shot](https://i.imgur.com/IJEEmEV.png)
->![Screen_shot](https://i.imgur.com/tVo8c0v.png)
->![Screen_shot](https://i.imgur.com/a3ymSBV.png)
->![Screen_shot](https://i.imgur.com/WbihRfG.png)
->![Screen_shot](https://i.imgur.com/BiShy6V.png)
->Generate different sine waves and plot each signal and plot the sum of sine waves generated
->![Screen_shot](https://i.imgur.com/6jPTiew.png)
->Create Noise using SNR ratio
->![Screen_shot](https://i.imgur.com/m08RPnk.png)
->Sampling and reconstruct signal using sinc interpolation 
->![Screen_shot](https://i.imgur.com/oYjTcoH.png)
+* Upload Signal and plot it.
+* Generate Sinusoidal signals with desired frequency, amplitude and phase. 
+* View each sin signal generated plot and view the sum of generated sin signals plot.
+* Create white Gaussian Noise using SNR ratio.
+* Sampling and reconstruct sum of signals using sinc interpolation.
+
+
+Uploading Sampling Dashboard - Google Chrome 2022-11-01 17-16-21.mp4…
+
+
+
+
 
